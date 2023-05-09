@@ -2,12 +2,11 @@ import pygame
 from sys import exit
 
 pygame.init()
-screen = pygame.display.set_mode((800,400))
+screen = pygame.display.set_mode((1600,900))
 pygame.display.set_caption('Runner')
 clock = pygame.time.Clock()
 
-test_surface = pygame.Surface((200,100))
-test_surface.fill('Red')
+john_surface = pygame.image.load('graphics/John.png')
 
 while True:
     for event in pygame.event.get():
@@ -15,7 +14,7 @@ while True:
             pygame.quit()
             exit()
 
-    screen.blit(test_surface,(300,150))
+    screen.blit(john_surface,(450,100))
 
     pygame.display.update()
     clock.tick(60) 
