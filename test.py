@@ -2,15 +2,22 @@ import pygame
 from sys import exit
 
 pygame.init()
-screen = pygame.display.set_mode((910,540))
+screen = pygame.display.set_mode((800,400))
 pygame.display.set_caption('Runner')
 clock = pygame.time.Clock()
-test_font = pygame.font.Font('fonts/impact.ttf',50)
+test_font = pygame.font.Font('font/Pixeltype.ttf',50)
 
-green_bg = pygame.Surface((910,540))
-green_bg.fill('Green')
-john_surface = pygame.image.load('graphics/John.png')
-text_surface = test_font.render('Othello',True,'White')
+sky_surface = pygame.image.load('graphics/Sky.png').convert()
+ground_surface = pygame.image.load('graphics/ground.png').convert()
+
+score_surf = test_font.render('My game',False,(64,64,64))
+score_rect = score_surf.get_rect(center = (400,50))
+
+snail_surface = pygame.image.load('graphics/snail/snail1.png').convert_alpha()
+snail_rect = snail_surface.get_rect(bottomright = (800,300))
+
+player_surf = pygame.image.load('graphics/player/player_walk_1.png').convert_alpha()
+player_rect = player_surf.get_rect(midbottom = (80,300))
 
 while True:
     for event in pygame.event.get():
@@ -18,9 +25,31 @@ while True:
             pygame.quit()
             exit()
 
-    screen.blit(green_bg,(0,0))
-    # screen.blit(john_surface,(450,100))
-    screen.blit(text_surface,(400,50))
+        # if event.type == pygame.MOUSEMOTION:
+        #     if player_rect.collidepoint(event.pos): print('collission')
+        
+
+    screen.blit(sky_surface,(0,0))
+    screen.blit(ground_surface,(0,300))
+    pygame.draw.rect(screen,'#c0e8ec',score_rect)
+    pygame.draw.rect(screen,'#c0e8ec',score_rect,10)
+    pygame.draw.ellipse(screen,'Brown',pygame.Rect(50,200,100,100))
+    screen.blit(score_surf,score_rect)
+
+    snail_rect.x -= 4
+    if snail_rect.right <= 0: snail_rect.left = 800
+    screen.blit(snail_surface,snail_rect)
+    screen.blit(player_surf,player_rect)
+
+    # keys = pygame.key.get_pressed()
+    # if keys[pygame.K_SPACE]:
+
+    # if player_rect.colliderect(snail_rect):
+    #     pass
+
+    # mouse_pos = pygame.mouse.get_pos()
+    # if player_rect.collidepoint((mouse_pos)):
+    #     pygame.mouse.get_pressed()
 
     pygame.display.update()
     clock.tick(60) 
