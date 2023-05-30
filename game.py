@@ -35,13 +35,22 @@ def circle_animation_2(circle_list):
 
         screen.blit(circle_surf_2,circle_rect)
 
+def rules_text_display(rule_list):
+    y = 200
+    for rule_text in rule_list:
+        screen.blit(rule_text,rule_text.get_rect(midleft = (50, y)))
+        y += 100
+    
+
 pygame.init()
 screen = pygame.display.set_mode((1600,900))
 pygame.display.set_caption('Othelol')
 clock = pygame.time.Clock()
+diff_menu = False
 game_active = False
 menu = True
 rules_menu = False
+music_playing = False
 
 circle_surf = pygame.image.load('graphics/circle.png').convert_alpha()
 circle_surf_2 = pygame.image.load('graphics/circle2.png').convert_alpha()
@@ -53,27 +62,27 @@ circles2 = []
 
 title = pygame.image.load('graphics/game_title.png').convert_alpha()
 title_rect = title.get_rect(center = (800,150))
+arial_font_2 = pygame.font.Font('font/Arialn.ttf',50)
+play_msg = arial_font_2.render('Tap to play!',True,'Red')
+play_msg_rect = play_msg.get_rect(midtop = (800, 450))
 
 rules = pygame.image.load('graphics/rules.png').convert()
 rules_rect = rules.get_rect(center = (120,70))
+arial_font = pygame.font.Font('font/Arialn.ttf',40)
+rules_text_1 = arial_font.render('1. Pieces can be placed as long as there are at least 1 adjacent enemy piece',True,'Black')
+rules_text_2 = arial_font.render('2. When placing a piece, opposing pieces that are surrounded vertically, horizontally,',True,'Black')
+rules_text_3 = arial_font.render('    and diagonally by two ends including the placed piece are flipped',True,'Black')
+rules_text_4 = arial_font.render('3. Player with the most remaining pieces win the game',True,'Black')
+rules_text_5 = arial_font.render('4. The 4 corner pieces cannot be flipped (tip)',True,'Black')
+rules_texts = [rules_text_1,rules_text_2,rules_text_3,rules_text_4,rules_text_5]
+rules_text_rect = rules_text_1.get_rect(midleft = (100, 300))
 
-music_toggle = pygame.image.load('graphics/toggle_music.png').convert()
-music_rect = music_toggle.get_rect(center = (70, 190))
+music_button = pygame.image.load('graphics/toggle_music.png').convert()
+music_button_2 = pygame.image.load('graphics/toggle_music_2.png').convert()
+music_rect = music_button.get_rect(center = (70, 190))
 
-# bg_music = pygame.mixer.Sound('')
-# bg_music.set_volume(0.5)
-
-# title_surf = pygame.image.load('').convert_alpha()
-# title_rect = title_surf.get_rect()
-
-# play_surf = pygame.image.load('').convert_alpha()
-# play_button_rect = play_surf.get_rect()
-
-# rules_surf = pygame.image.load('').convert_alpha()
-# rules_button_rect = rules_surf.get_rect()
-
-# music_surf = pygame.image.load('').convert_alpha()
-# music_button_rect = music_surf.get_rect()
+bg_music = pygame.mixer.Sound('audio/kurukuru.mp3')
+bg_music.set_volume(0.5)
 
 circle_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(circle_timer, 600)
@@ -96,12 +105,29 @@ while True:
                 if rules_rect.collidepoint(event.pos):
                     menu = False
                     rules_menu = True
+                    break
+                        
+                elif music_rect.collidepoint(event.pos):
+                    music_playing = not music_playing
+                    if music_playing:
+                        bg_music.play(loops = -1)
+                    else:
+                        bg_music.stop()
+                
+                else:
+                    menu = False
+                    diff_menu = True
 
             if event.type == circle_timer:
                 circles.append(circle_surf.get_rect(center = (-200, randint(0,900))))
 
             if event.type == circle_timer_2:
                 circles2.append(circle_surf_2.get_rect(center = (1800, randint(0,900))))
+
+        if rules_menu:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                menu = True
+                rules_menu = False
 
         else:
             pass
@@ -112,12 +138,21 @@ while True:
         circle_animation(circles)
         circle_animation_2(circles2)
         screen.blit(title,title_rect)
+        screen.blit(play_msg,play_msg_rect)
         screen.blit(rules, rules_rect)
-        screen.blit(music_toggle, music_rect)
+        if music_playing:
+            screen.blit(music_button, music_rect)
+        else: 
+            screen.blit(music_button_2, music_rect)
 
     if rules_menu:
         
         screen.fill('White')
+        rules_text_display(rules_texts)
+
+    if diff_menu:
+
+        screen.fill('Blue')
 
     pygame.display.update()
     clock.tick(60)
