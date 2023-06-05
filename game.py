@@ -25,9 +25,9 @@ class Player(pygame.sprite.Sprite):
         screen.blit(self.piece_num_display,self.piece_num_rect)
         return self.piece_num
 
-    def player_input(self):
+    def player_input(self,obj_group):
         if self.test:
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and obj_group:
                 self.test = False
                 self.turn += 1
         else:
@@ -51,39 +51,88 @@ class Opponent(pygame.sprite.Sprite):
         pass
 
 class Piece(pygame.sprite.Sprite):
-    def __init__(self, type):
+    def __init__(self, type, rect):
         super().__init__()
+
+        if type == 'player':
+            self.flipped = False
+            self.img = pygame.image.load('graphics/piece_1.png').convert_alpha()
+            self.rect = self.img.get_rect(center = rect)
+
+        else:
+            self.flipped = True
+            self.img = pygame.image.load('graphics/piece_2.png').convert_alpha()
+            self.rect = self.img.get_rect(center = rect)
+
+        self.x_coord = ((self.rect.x - 450)//100)+1
+        self.y_coord = ((self.rect.y - 100)//-100)+8
+        self.position = (self.x_coord,self.y_coord)
+
+        '''
+        x -> 450,1150
+        y -> 100, 800
+
+        (1,1)
+        400,50 would be the bottom left
+        X: Examples (450, 100), (1150,800)
+        -450 (0)  (700)
+        /100 (0)  (7)
+        +1   (1)  (8)
+
+        Y: Examples (450, 100), (1150,800)
+        -100  (0)  (700)
+        /-100 (0)  (-7)
+        +8    (8)  (1)
+        '''
+    def display_piece(self):
+        screen.blit(self.img,self.rect)
+
+    def update(self):
+        self.display_piece()
+
 
 
 class Board(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, player, rect):
         super().__init__()
         global event
+        '''
+        CHANGE OF MIND
+        Board object in the group will be REPLACED everytime theres an INPUT
+        '''
 
-        
         # tile stuff
-        self.tile_img = pygame.image.load('graphics/tile.png').convert()
+        if type == 'board':
+            self.tile_img = pygame.image.load('graphics/tile.png').convert()
 
-        self.row_1 = [self.tile_img.get_rect(center = (450+100*x, 800)) for x in range(8)]
-        self.row_2 = [self.tile_img.get_rect(center = (450+100*x, 700)) for x in range(8)]
-        self.row_3 = [self.tile_img.get_rect(center = (450+100*x, 600)) for x in range(8)]
-        self.row_4 = [self.tile_img.get_rect(center = (450+100*x, 500)) for x in range(8)]
-        self.row_5 = [self.tile_img.get_rect(center = (450+100*x, 400)) for x in range(8)]
-        self.row_6 = [self.tile_img.get_rect(center = (450+100*x, 300)) for x in range(8)]
-        self.row_7 = [self.tile_img.get_rect(center = (450+100*x, 200)) for x in range(8)]
-        self.row_8 = [self.tile_img.get_rect(center = (450+100*x, 100)) for x in range(8)]
+            self.row_1 = [0 + self.tile_img.get_rect(center = (450+100*x, 800)) for x in range(8)]
+            self.row_2 = [0 + self.tile_img.get_rect(center = (450+100*x, 700)) for x in range(8)]
+            self.row_3 = [0 + self.tile_img.get_rect(center = (450+100*x, 600)) for x in range(8)]
+            self.row_4 = [0 + self.tile_img.get_rect(center = (450+100*x, 500)) for x in range(8)]
+            self.row_5 = [0 + self.tile_img.get_rect(center = (450+100*x, 400)) for x in range(8)]
+            self.row_6 = [0 + self.tile_img.get_rect(center = (450+100*x, 300)) for x in range(8)]
+            self.row_7 = [0 + self.tile_img.get_rect(center = (450+100*x, 200)) for x in range(8)]
+            self.row_8 = [0 + self.tile_img.get_rect(center = (450+100*x, 100)) for x in range(8)]
 
-        self.board = [self.row_1,self.row_2,self.row_3,self.row_4,self.row_5,self.row_6,self.row_7,self.row_8]
+            self.board = [0, self.row_1, self.row_2, self.row_3, self.row_4, self.row_5, self.row_6, self.row_7, self.row_8]
 
         # piece stuff
+        else:
+            # if (750, 400) coord should be row 5 (3, 5)
+            self.x_coord = ((rect.x - 450)//100)+1 
+            self.y_coord = ((rect.y - 100)//-100)+8
+            if player == True:
+                self.b = pygame.image.load('graphics/tile_b.png').convert_alpha()
+                self.b_rect = rect
+                # convert rect to list index
+                # change valie to tile with piece
+                # (3, 5) -> (750, 400)
+                self.board[self.x_coord][self.y_coord] = self.b.get_rect(center = (450+100*self.x_coord,))
+            else:
+                self.piece_w = pygame.image.load('graphics/tile_w.png').convert_alpha()
+                self.w_rect = rect
 
-        self.piece_b = pygame.image.load('graphics/piece_1.png').convert_alpha()
-        self.b_rect = self.piece_b.get_rect(center = (750,400))
-
-        self.piece_w = pygame.image.load('graphics/piece_2.png').convert_alpha()
-        self.w_rect = self.piece_w.get_rect(center = (750,500))
-
-        self.pieces = [self.piece_b.get_rect(center = (750,400)), self.piece_b.get_rect(center = (850, 500))]
+        # self.pieces = [self.piece_b.get_rect(center = (750,400)), self.piece_b.get_rect(center = (850, 500))]
 
         self.test = True
 
@@ -96,19 +145,19 @@ class Board(pygame.sprite.Sprite):
                             self.pieces.append((self.b_rect.x + 10, self.b_rect.y + 10))
                         
 
-    def display_tiles(self):
-        for x in self.board:
-            for y in x:
+    def display_board(self):
+        for x in self.board[1::]:
+            for y in x[1::]:
                 screen.blit(self.tile_img,y)
+    
 
-    def display_pieces(self):
-        for x in self.pieces:
-            screen.blit(self.piece_b,x)
-        
+
     def update(self):
-        self.display_tiles()
+        if type == 'board':
+            self.display_board()
         self.player_turn()
-        self.display_pieces()
+        if type == 'piece':
+            self.display_piece()
 
         
 
@@ -137,16 +186,16 @@ def rules_text_display(rule_list):
         screen.blit(rule_text,rule_text.get_rect(midleft = (50, y)))
         y += 100
 
-def pieces_display(piece_dict):
-    global piece_b,piece_w
+# def pieces_display(piece_dict):
+#     global piece_b,piece_w
 
-    i = -1
-    for piece_rect in piece_dict:
-        i += 1
-        if i % 2 == 0:
-            screen.blit(piece_b,piece_dict[i])
-        else:
-            screen.blit(piece_w,piece_dict[i])
+#     i = -1
+#     for piece_rect in piece_dict:
+#         i += 1
+#         if i % 2 == 0:
+#             screen.blit(piece_b,piece_dict[i])
+#         else:
+#             screen.blit(piece_w,piece_dict[i])
 
     
 
@@ -199,14 +248,9 @@ bg_music.set_volume(0.5)
 
 # GAME VARIABLES
 
-player = pygame.sprite.GroupSingle()
-player.add(Player())
+# board_surf = pygame.image.load('graphics/board.png').convert()
+# board_rect = board_surf.get_rect(center = (800, 450))
 
-board = pygame.sprite.Group()
-board.add(Board())
-
-board_surf = pygame.image.load('graphics/board.png').convert()
-board_rect = board_surf.get_rect(center = (800, 450))
 
 surrender_surf = pygame.image.load('graphics/surrender.png').convert()
 surrender_rect = surrender_surf.get_rect(center = (120,70))
@@ -217,10 +261,18 @@ piece_b_rect = piece_b.get_rect(center = (750,400))
 piece_w = pygame.image.load('graphics/piece_2.png').convert_alpha()
 piece_w_rect = piece_b.get_rect(center = (750,500))
 
-pieces = [piece_b_rect, 
-          piece_w_rect, 
-          piece_b.get_rect(center = (850,500)),
-          piece_w.get_rect(center = (850,400))]
+# pieces_list = [piece_b_rect, 
+#           piece_w_rect, 
+#           piece_b.get_rect(center = (850,500)),
+#           piece_w.get_rect(center = (850,400))]
+
+player = pygame.sprite.GroupSingle()
+player.add(Player())
+
+board = pygame.sprite.Group()
+board.add(Board('board',0,0))
+board.add(Board('piece',True,piece_b.get_rect(center = (750,400))))
+board.add(Board('piece',True,piece_b.get_rect(center = (850,500))))
 
 circle_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(circle_timer, 600)
@@ -300,13 +352,15 @@ while True:
         # screen.blit(board_surf,board_rect)
         screen.blit(surrender_surf,surrender_rect)
 
-        pieces_display(pieces)
+        # pieces_display(pieces)
 
         player.update()
 
         board.update()
 
-        screen.blit(piece_b,piece_b_rect)
+        # screen.blit(piece_b,piece_b_rect)
+
+
 
 
         
