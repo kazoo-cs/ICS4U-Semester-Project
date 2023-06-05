@@ -1,21 +1,117 @@
 import pygame
 from sys import exit
 from random import randint,choice
+from time import time
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        global event
         self.turn = 0
+        self.turn_display = arial_font.render(f'Turn: {self.turn}',False,'Black')
+        self.turn_display_rect = self.turn_display.get_rect(center = (200,400))
+        self.piece_num = 2
+        self.piece_num_display = arial_font.render(f'Pieces: {self.piece_num}',False,'Black')
+        self.piece_num_rect = self.piece_num_display.get_rect(center = (200,500))
+        self.test = True
+
+    def display_turn(self):
+        self.turn_display = arial_font.render(f'Turn: {self.turn}',False,'Black')
+        screen.blit(self.turn_display,self.turn_display_rect)
+        return self.turn
+
+    def display_piece_num(self):
+        self.piece_num_display = arial_font.render(f'Pieces: {self.piece_num}',False,'Black')
+        screen.blit(self.piece_num_display,self.piece_num_rect)
+        return self.piece_num
+
+    def player_input(self):
+        if self.test:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                self.test = False
+                self.turn += 1
+        else:
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.test = True
+
+    def pieces(self):
+        return 
+
+    def surrender(self):
+         pass
+
+    def update(self):
+        self.player_input()
+        self.display_turn()
+        self.display_piece_num()
 
 class Opponent(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        pass
+
+class Piece(pygame.sprite.Sprite):
+    def __init__(self, type):
+        super().__init__()
+
 
 class Board(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        # self.board_image = pygame.image.load('').convert_alpha()
-        # self.piece_image = pygame.image.load('').convert_alpha()
+        global event
+
+        
+        # tile stuff
+        self.tile_img = pygame.image.load('graphics/tile.png').convert()
+
+        self.row_1 = [self.tile_img.get_rect(center = (450+100*x, 800)) for x in range(8)]
+        self.row_2 = [self.tile_img.get_rect(center = (450+100*x, 700)) for x in range(8)]
+        self.row_3 = [self.tile_img.get_rect(center = (450+100*x, 600)) for x in range(8)]
+        self.row_4 = [self.tile_img.get_rect(center = (450+100*x, 500)) for x in range(8)]
+        self.row_5 = [self.tile_img.get_rect(center = (450+100*x, 400)) for x in range(8)]
+        self.row_6 = [self.tile_img.get_rect(center = (450+100*x, 300)) for x in range(8)]
+        self.row_7 = [self.tile_img.get_rect(center = (450+100*x, 200)) for x in range(8)]
+        self.row_8 = [self.tile_img.get_rect(center = (450+100*x, 100)) for x in range(8)]
+
+        self.board = [self.row_1,self.row_2,self.row_3,self.row_4,self.row_5,self.row_6,self.row_7,self.row_8]
+
+        # piece stuff
+
+        self.piece_b = pygame.image.load('graphics/piece_1.png').convert_alpha()
+        self.b_rect = self.piece_b.get_rect(center = (750,400))
+
+        self.piece_w = pygame.image.load('graphics/piece_2.png').convert_alpha()
+        self.w_rect = self.piece_w.get_rect(center = (750,500))
+
+        self.pieces = [self.piece_b.get_rect(center = (750,400)), self.piece_b.get_rect(center = (850, 500))]
+
+        self.test = True
+
+    def player_turn(self):
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for x in self.board:
+                    for y in x:
+                        if y.collidepoint(event.pos) and y not in self.pieces:
+                            self.b_rect = y
+                            self.pieces.append((self.b_rect.x + 10, self.b_rect.y + 10))
+                        
+
+    def display_tiles(self):
+        for x in self.board:
+            for y in x:
+                screen.blit(self.tile_img,y)
+
+    def display_pieces(self):
+        for x in self.pieces:
+            screen.blit(self.piece_b,x)
+        
+    def update(self):
+        self.display_tiles()
+        self.player_turn()
+        self.display_pieces()
+
+        
+
 
 def circle_animation(circle_list):
     for circle_rect in circle_list:
@@ -103,6 +199,12 @@ bg_music.set_volume(0.5)
 
 # GAME VARIABLES
 
+player = pygame.sprite.GroupSingle()
+player.add(Player())
+
+board = pygame.sprite.Group()
+board.add(Board())
+
 board_surf = pygame.image.load('graphics/board.png').convert()
 board_rect = board_surf.get_rect(center = (800, 450))
 
@@ -139,8 +241,9 @@ while True:
                     menu = True
                     game_active = False
                     break
-
-
+            
+            
+                
         if menu:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if rules_rect.collidepoint(event.pos):
@@ -194,9 +297,18 @@ while True:
     if game_active:
 
         screen.fill('White')
-        screen.blit(board_surf,board_rect)
+        # screen.blit(board_surf,board_rect)
         screen.blit(surrender_surf,surrender_rect)
+
         pieces_display(pieces)
+
+        player.update()
+
+        board.update()
+
+        screen.blit(piece_b,piece_b_rect)
+
+
         
 
     pygame.display.update()
