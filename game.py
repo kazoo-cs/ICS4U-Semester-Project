@@ -165,11 +165,14 @@ class Tile(pygame.sprite.Sprite):
     def get_coords(self):
         return (self.x, self.y)
     
-    def get_side(self):
+    def is_player(self):
         return self.player_piece
     
-    def get_occupied(self):
+    def is_occupied(self):
         return self.occupied
+    
+    def flip(self):
+        self.player_piece = not self.player_piece
             
 
     # def update(self):
@@ -214,11 +217,77 @@ def rules_text_display(rule_list):
 #         else:
 #             screen.blit(piece_w,piece_dict[i])
 
-    
+def placeable(target_index, obj_group):
+    '''
+    Must DETERMINE if clicked tile is available by the player
+    It is already known that the tile clicked is UNOCCUPIED
+    Conditions
+    1. There is at least ONE adjacent ENEMY piece
+    2. The ENEMY piece is being sandwitched by another PLAYER PIECE behind
+
+    Steps
+    1. IDENTIFY which adjacent tile has an ENEMY PIECE
+    2. TRACE down each direction in which there is an ENEMY PIECE
+        Ex. Let x and y be the target objects coordinates
+        8 different trace checks
+        (x,y+1)        UPWARD                  = START INDEX + 1
+        (x+1,y+1)      DIAGONAL UPWARD RIGHT   = START INDEX + 9
+        (x+1,y)        HORIZONTAL RIGHT        = START INDEX + 8
+        (x+1,y-1)      DIAGONAL DOWNWARD RIGHT = START INDEX + 7
+        (x,y-1)        DOWNWARD                = START INDEX - 1
+        (x-1,y-1)      DIAGONAL DOWNWARD LEFT  = START INDEX - 9
+        (x-1,y)        HORIZONTAL LEFT         = START INDEX - 8
+        (x-1,y+1)      DIAGONAL UPWARD LEFT    = START INDEX - 7
+
+    3. If direction has PLAYER OCCUPIED or UNOCCUPIED tile, it is marked as FALSE
+       If direction has ENEMY OCCUPIED, temporarily mark as TRUE
+       If direction is TRUE, use the same direction indicator (i.e. (x-1,y-1))
+       If traced tile AFTER the previously identified ENEMY TILE is ANOTHER ENEMY TILE, mark as TRUE and continue
+       If traced tile AFTER the previous is UNOCCUPIED, mark the entire direction as FALSE
+       If traced tile FINDS EVEN ONE PLAYER tile, mark the entire direction as TRUE
+       Having even ONE DIRECTION marked as TRUE will allow the tile to be OCCUPIED
+
+    '''
+    target_obj = obj_group[target_index]
+
+    def upward(i,g,direction=True,count=1):
+        if i+1 >= 0:
+            if not g[i+1].is_occupied() or g[i+1].is_player() and count == 1: # FIRST CHECK. If EMPTY or is PLAYER, FALSE
+                direction = False
+                return direction
+            elif not g[i+1].is_occupied() and count >= 2: # After 2 checks, if unoccupied, False
+                direction = False
+                return direction
+            elif g[i+1].is_occupied() and g[i+1].is_player(): # if player after 2, TRUE
+                direction = True
+                return direction
+            elif g[i+1].is_occupied() and not g[i+1].is_player():
+                return upward(i+1,g,direction,count+1)
+        else:
+            return False
+            
+                
+    def downward(i,g,direction=True):
+        pass
+    def left(i,g,direction=True):
+        pass
+    def right(i,g,direction=True):
+        pass
+    def upward_right(i,g,direction=True):
+        pass
+    def downward_right(i,g,direction=True):
+        pass
+    def upward_left(i,g,direction=True):
+        pass
+    def downward_left(i,g,direction=True):
+        pass
+        
+    if upward(target_index, obj_group):
+        obj_group[target_index].player_turn()
 
 pygame.init()
 screen = pygame.display.set_mode((1600,900))
-pygame.display.set_caption('Othelol')
+pygame.display.set_caption('AIthello')
 clock = pygame.time.Clock()
 game_active = False
 menu = True
@@ -286,6 +355,9 @@ piece_w_rect = piece_b.get_rect(center = (750,500))
 player = pygame.sprite.GroupSingle()
 player.add(Player())
 
+'''
+
+'''
 board = pygame.sprite.Group()
 for x in range(1,9):
     for y in range(1,9):
@@ -316,20 +388,22 @@ while True:
                     menu = True
                     game_active = False
                     break
+
                 else:
-                    for x in board:
-                        if x.get_rect().collidepoint(event.pos):
-                            for y in board:
-                                if y.get_x() in [x.get_x(), x.get_x()-1, x.get_x()+1] and y.get_y() in [x.get_y(), x.get_y()-1, x.get_y()+1] and not y.get_side() and y.get_occupied():
-                                    '''
-                                    Currently has object 'y' that is said to be in contact with the PLACED PIECE
-                                    CHECK THE DIFFERENCES IN COORDINATES
-                                    (4,4) + (4,5)
-                                    +1 diff in y coord
-                                    From y, check for objects with +1 y coord from y
-                                    Repeat process (maybe recursion?)
-                                    '''
-                                    x.player_turn()
+                    for x in range(0,63): # Cycles through board group using INDEX
+                        if board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied():
+                            placeable(x,board)
+                                
+                            # for y in board:
+                            #     if y.get_x() in [x.get_x(), x.get_x()-1, x.get_x()+1] and y.get_y() in [x.get_y(), x.get_y()-1, x.get_y()+1] and not y.get_side() and y.get_occupied():
+                            #         '''
+                            #         Currently has object 'y' that is said to be in contact with the PLACED PIECE
+                            #         There are 8 tiles adjacent
+                                    
+                            #         '''
+                            #         x_diff = y.get_x() - x.get_x()
+                            #         y_diff = y.get_y() - x.get_y()
+                            #         x.player_turn()
                                     
                             
 
