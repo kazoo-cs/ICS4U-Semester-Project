@@ -3,52 +3,35 @@ from sys import exit
 from random import randint,choice
 from time import time
 
-class Player(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        global event
-        self.turn = 0
-        self.turn_display = arial_font.render(f'Turn: {self.turn}',False,'Black')
-        self.turn_display_rect = self.turn_display.get_rect(center = (200,400))
-        self.piece_num = 2
-        self.piece_num_display = arial_font.render(f'Pieces: {self.piece_num}',False,'Black')
-        self.piece_num_rect = self.piece_num_display.get_rect(center = (200,500))
-        self.test = True
+# Recycle Bin
 
-    def display_turn(self):
-        self.turn_display = arial_font.render(f'Turn: {self.turn}',False,'Black')
-        screen.blit(self.turn_display,self.turn_display_rect)
-        return self.turn
+# self.row_1 = [0 + self.tile_img.get_rect(center = (450+100*x, 800)) for x in range(8)]
+# self.row_2 = [0 + self.tile_img.get_rect(center = (450+100*x, 700)) for x in range(8)]
+# self.row_3 = [0 + self.tile_img.get_rect(center = (450+100*x, 600)) for x in range(8)]
+# self.row_4 = [0 + self.tile_img.get_rect(center = (450+100*x, 500)) for x in range(8)]
+# self.row_5 = [0 + self.tile_img.get_rect(center = (450+100*x, 400)) for x in range(8)]
+# self.row_6 = [0 + self.tile_img.get_rect(center = (450+100*x, 300)) for x in range(8)]
+# self.row_7 = [0 + self.tile_img.get_rect(center = (450+100*x, 200)) for x in range(8)]
+# self.row_8 = [0 + self.tile_img.get_rect(center = (450+100*x, 100)) for x in range(8)]
 
-    def display_piece_num(self):
-        self.piece_num_display = arial_font.render(f'Pieces: {self.piece_num}',False,'Black')
-        screen.blit(self.piece_num_display,self.piece_num_rect)
-        return self.piece_num
+# self.board = [0, self.row_1, self.row_2, self.row_3, self.row_4, self.row_5, self.row_6, self.row_7, self.row_8]
 
-    def player_input(self):
-        if self.test:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                self.test = False
-                self.turn += 1
-        else:
-            if event.type == pygame.MOUSEBUTTONUP:
-                self.test = True
+# piece stuff
+# if (750, 400) coord should be row 5 (3, 5)
+# self.x_coord = ((rect.x - 450)//100)+1 
+# self.y_coord = ((rect.y - 100)//-100)+8
+# if player == True:
+#     self.b = pygame.image.load('graphics/tile_b.png').convert_alpha()
+#     self.b_rect = rect
+#     # convert rect to list index
+#     # change valie to tile with piece
+#     # (3, 5) -> (750, 400)
+#     self.board[self.x_coord][self.y_coord] = self.b.get_rect(center = (450+100*self.x_coord,))
 
-    def pieces(self):
-        return 
+#     self.piece_w = pygame.image.load('graphics/tile_w.png').convert_alpha()
+#     self.w_rect = rect
 
-    def surrender(self):
-         pass
-
-    def update(self):
-        self.player_input()
-        self.display_turn()
-        self.display_piece_num()
-
-class Opponent(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        pass
+# self.pieces = [self.piece_b.get_rect(center = (750,400)), self.piece_b.get_rect(center = (850, 500))]
 
 # class Piece(pygame.sprite.Sprite):
 #     def __init__(self, type, rect):
@@ -90,13 +73,75 @@ class Opponent(pygame.sprite.Sprite):
 #     def update(self):
 #         self.display_piece()
 
-
-class Tile(pygame.sprite.Sprite):
-    def __init__(self, x, y, is_occupied, is_player):
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
         super().__init__()
+        global event, player_turn, board
+        self.turn = 0
+        self.turn_display = arial_font.render(f'Turn: {self.turn}',False,'Black')
+        self.turn_display_rect = self.turn_display.get_rect(center = (200,400))
+        self.piece_num = 0
+        self.piece_num_display = arial_font.render(f'Pieces: {self.piece_num}',False,'Black')
+        self.piece_num_rect = self.piece_num_display.get_rect(center = (200,500))
+        if player_turn:
+            self.turn_side = arial_font.render(f'Turn: Player',False,'Black')
+        else:
+            self.turn_side = arial_font.render(f'Turn: Opponent',False,'Black')
+        self.turn_side_rect = self.turn_side.get_rect(center = (200,600))
+        self.test = True
 
+    def display_turn(self):
+        self.turn_display = arial_font.render(f'Turn: {self.turn}',False,'Black')
+        screen.blit(self.turn_display,self.turn_display_rect)
+        return self.turn
+    
+    def display_side(self):
+        if player_turn:
+            self.turn_side = arial_font.render(f'Turn: Player',False,'Black')
+        else:
+            self.turn_side = arial_font.render(f'Turn: Opponent',False,'Black')
+        self.turn_side_rect = self.turn_side.get_rect(center = (200,600))
+        screen.blit(self.turn_side,self.turn_side_rect)
+
+    def display_piece_num(self):
+        self.piece_num = 0
+        for x in board:
+            if x.is_player():
+                self.piece_num += 1
+        self.piece_num_display = arial_font.render(f'Pieces: {self.piece_num}',False,'Black')
+        screen.blit(self.piece_num_display,self.piece_num_rect)
+        return self.piece_num
+
+    def player_input(self):
+        if self.test:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                self.test = False
+                self.turn += 1
+        else:
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.test = True
+
+    def pieces(self):
+        return 
+
+    def surrender(self):
+         pass
+
+    def update(self):
+        self.player_input()
+        self.display_turn()
+        self.display_piece_num()
+        self.display_side()
+
+class Opponent(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        pass
+
+
+class Tile:
+    def __init__(self, x, y, is_occupied, is_player):
         global event
-
         # tile stuff
         self.x = x
         self.y = y
@@ -109,38 +154,8 @@ class Tile(pygame.sprite.Sprite):
                 self.image = pygame.image.load('graphics/tile_w.png').convert()
         else:
             self.image = pygame.image.load('graphics/tile.png').convert()
-
         self.rect = self.image.get_rect(center = (450+100*x, 900-(y*100)))
 
-        # self.row_1 = [0 + self.tile_img.get_rect(center = (450+100*x, 800)) for x in range(8)]
-        # self.row_2 = [0 + self.tile_img.get_rect(center = (450+100*x, 700)) for x in range(8)]
-        # self.row_3 = [0 + self.tile_img.get_rect(center = (450+100*x, 600)) for x in range(8)]
-        # self.row_4 = [0 + self.tile_img.get_rect(center = (450+100*x, 500)) for x in range(8)]
-        # self.row_5 = [0 + self.tile_img.get_rect(center = (450+100*x, 400)) for x in range(8)]
-        # self.row_6 = [0 + self.tile_img.get_rect(center = (450+100*x, 300)) for x in range(8)]
-        # self.row_7 = [0 + self.tile_img.get_rect(center = (450+100*x, 200)) for x in range(8)]
-        # self.row_8 = [0 + self.tile_img.get_rect(center = (450+100*x, 100)) for x in range(8)]
-
-        # self.board = [0, self.row_1, self.row_2, self.row_3, self.row_4, self.row_5, self.row_6, self.row_7, self.row_8]
-
-        # piece stuff
-        # if (750, 400) coord should be row 5 (3, 5)
-        # self.x_coord = ((rect.x - 450)//100)+1 
-        # self.y_coord = ((rect.y - 100)//-100)+8
-        # if player == True:
-        #     self.b = pygame.image.load('graphics/tile_b.png').convert_alpha()
-        #     self.b_rect = rect
-        #     # convert rect to list index
-        #     # change valie to tile with piece
-        #     # (3, 5) -> (750, 400)
-        #     self.board[self.x_coord][self.y_coord] = self.b.get_rect(center = (450+100*self.x_coord,))
-    
-        #     self.piece_w = pygame.image.load('graphics/tile_w.png').convert_alpha()
-        #     self.w_rect = rect
-
-        # self.pieces = [self.piece_b.get_rect(center = (750,400)), self.piece_b.get_rect(center = (850, 500))]
-
-        
 
     def player_turn(self):
         if self.occupied:
@@ -152,6 +167,17 @@ class Tile(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
             self.occupied = True
             self.player_piece = True
+
+    def opp_turn(self):
+        if self.occupied:
+            self.image = pygame.image.load('graphics/tile_w.png').convert()
+            self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
+            self.player_piece = False
+        else:
+            self.image = pygame.image.load('graphics/tile_w.png').convert()
+            self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
+            self.occupied = True
+            self.player_piece = False
 
     def get_rect(self):
         return self.rect
@@ -173,6 +199,18 @@ class Tile(pygame.sprite.Sprite):
     
     def flip(self):
         self.player_piece = not self.player_piece
+
+    def display(self):
+        screen.blit(self.image,self.rect)
+
+    def update(self):
+        if self.player_piece == False and self.occupied:
+            self.image = pygame.image.load('graphics/tile_w.png').convert()
+            self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
+        elif self.player_piece == True and self.occupied:
+            self.image = pygame.image.load('graphics/tile_b.png').convert()
+            self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
+        
             
 
     # def update(self):
@@ -248,48 +286,354 @@ def placeable(target_index, obj_group):
        Having even ONE DIRECTION marked as TRUE will allow the tile to be OCCUPIED
 
     '''
-    target_obj = obj_group[target_index]
 
     def upward(i,g,direction=True,count=1):
-        if i+1 >= 0:
+        if i+1 <= 63:
             if not g[i+1].is_occupied() or g[i+1].is_player() and count == 1: # FIRST CHECK. If EMPTY or is PLAYER, FALSE
                 direction = False
                 return direction
-            elif not g[i+1].is_occupied() and count >= 2: # After 2 checks, if unoccupied, False
+            elif not g[i+1].is_occupied() and count >= 2: # On 2+ checks, if unoccupied, FALSE
                 direction = False
                 return direction
-            elif g[i+1].is_occupied() and g[i+1].is_player(): # if player after 2, TRUE
+            elif g[i+1].is_occupied() and g[i+1].is_player(): # if player after 2+ checks, TRUE
                 direction = True
+                for x in range(target_index, i+1):
+                    g[x].flip()
                 return direction
-            elif g[i+1].is_occupied() and not g[i+1].is_player():
+            elif g[i+1].is_occupied() and not g[i+1].is_player(): # If enemy piece on 1+ checks, RECURSIONNNN
                 return upward(i+1,g,direction,count+1)
         else:
             return False
             
-                
-    def downward(i,g,direction=True):
-        pass
-    def left(i,g,direction=True):
-        pass
-    def right(i,g,direction=True):
-        pass
-    def upward_right(i,g,direction=True):
-        pass
-    def downward_right(i,g,direction=True):
-        pass
-    def upward_left(i,g,direction=True):
-        pass
-    def downward_left(i,g,direction=True):
-        pass
+    def downward(i,g,direction=True,count=1):
+        if i-1 >= 0:
+            if not g[i-1].is_occupied() or g[i-1].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i-1].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i-1].is_occupied() and g[i-1].is_player(): 
+                direction = True
+                for x in range(i,target_index):
+                    g[x].flip()
+                return direction
+            elif g[i-1].is_occupied() and not g[i-1].is_player(): 
+                return downward(i-1,g,direction,count+1)
+        else:
+            return False
         
-    if upward(target_index, obj_group):
+    def left(i,g,direction=True,count=1):
+        if i-8 >= 0:
+            if not g[i-8].is_occupied() or g[i-8].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i-8].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i-8].is_occupied() and g[i-8].is_player():
+                direction = True
+                for x in range(i,target_index,8):
+                    g[x].flip()
+                return direction
+            elif g[i-8].is_occupied() and not g[i-8].is_player(): 
+                return left(i-8,g,direction,count+1)
+        else:
+            return False
+        
+    def right(i,g,direction=True,count=1):
+        if i+8 <= 63:
+            if not g[i+8].is_occupied() or g[i+8].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i+8].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i+8].is_occupied() and g[i+8].is_player(): 
+                direction = True
+                for x in range(target_index,i+8,8):
+                    g[x].flip()
+                print('r')
+                return direction
+            elif g[i+8].is_occupied() and not g[i+8].is_player(): 
+                return right(i+8,g,direction,count+1)
+        else:
+            return False
+        
+    def upward_right(i,g,direction=True,count=1):
+        if i+9 <= 63:
+            if not g[i+9].is_occupied() or g[i+9].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i+9].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i+9].is_occupied() and g[i+9].is_player(): 
+                direction = True
+                for x in range(target_index,i+9,9):
+                    g[x].flip()
+                return direction
+            elif g[i+9].is_occupied() and not g[i+9].is_player(): 
+                return upward_right(i+9,g,direction,count+1)
+        else:
+            return False
+        
+    def downward_right(i,g,direction=True,count=1):
+        if i+7 <= 63:
+            if not g[i+7].is_occupied() or g[i+7].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i+7].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i+7].is_occupied() and g[i+7].is_player(): 
+                direction = True
+                for x in range(target_index,i+7,7):
+                    g[x].flip()
+                return direction
+            elif g[i+7].is_occupied() and not g[i+7].is_player(): 
+                return downward_right(i+7,g,direction,count+1)
+        else:
+            return False
+        
+    def upward_left(i,g,direction=True,count=1):
+        if i-7 >= 0:
+            if not g[i-7].is_occupied() or g[i-7].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i-7].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i-7].is_occupied() and g[i-7].is_player(): 
+                direction = True
+                for x in range(i,target_index,7):
+                    g[x].flip()
+                return direction
+            elif g[i-7].is_occupied() and not g[i-7].is_player(): 
+                return upward_left(i-7,g,direction,count+1)
+        else:
+            return False
+        
+    def downward_left(i,g,direction=True,count=1):
+        if i-9 >= 0:
+            if not g[i-9].is_occupied() or g[i-9].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i-9].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i-9].is_occupied() and g[i-9].is_player(): 
+                direction = True
+                for x in range(i,target_index,9):
+                    g[x].flip()
+                return direction
+            elif g[i-9].is_occupied() and not g[i-9].is_player(): 
+                return downward_left(i-9,g,direction,count+1)
+        else:
+            print('F5')
+            return False
+        
+    available = 0
+    if upward(target_index, obj_group): 
+        available += 1
+    if downward(target_index, obj_group): 
+        available += 1
+    if left(target_index, obj_group): 
+        available += 1
+    if right(target_index, obj_group): 
+        available += 1
+    if upward_right(target_index, obj_group): 
+        available += 1
+    if downward_right(target_index, obj_group): 
+        available += 1
+    if upward_left(target_index, obj_group): 
+        available += 1
+    if downward_left(target_index, obj_group): 
+        available += 1
+    
+    if available >= 1:
         obj_group[target_index].player_turn()
+        return True
+    else:
+        return False
+
+def placeable_opp(target_index, obj_group):
+
+    def upward(i,g,direction=True,count=1):
+        if i+1 <= 63:
+            if not g[i+1].is_occupied() or not g[i+1].is_player() and count == 1: # FIRST CHECK. If EMPTY or is PLAYER, FALSE
+                direction = False
+                return direction
+            elif not g[i+1].is_occupied() and count >= 2: # On 2+ checks, if unoccupied, FALSE
+                direction = False
+                return direction
+            elif g[i+1].is_occupied() and not g[i+1].is_player(): # if player after 2+ checks, TRUE
+                direction = True
+                for x in range(target_index, i+1):
+                    g[x].flip()
+                return direction
+            elif g[i+1].is_occupied() and g[i+1].is_player(): # If enemy piece on 1+ checks, RECURSIONNNN
+                return upward(i+1,g,direction,count+1)
+        else:
+            return False
+            
+    def downward(i,g,direction=True,count=1):
+        if i-1 >= 0:
+            if not g[i-1].is_occupied() or not g[i-1].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i-1].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i-1].is_occupied() and not g[i-1].is_player(): 
+                direction = True
+                for x in range(i,target_index):
+                    g[x].flip()
+                return direction
+            elif g[i-1].is_occupied() and g[i-1].is_player(): 
+                return downward(i-1,g,direction,count+1)
+        else:
+            return False
+        
+    def left(i,g,direction=True,count=1):
+        if i-8 >= 0:
+            if not g[i-8].is_occupied() or not g[i-8].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i-8].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i-8].is_occupied() and not g[i-8].is_player():
+                direction = True
+                for x in range(i,target_index,8):
+                    g[x].flip()
+                return direction
+            elif g[i-8].is_occupied() and g[i-8].is_player(): 
+                return left(i-8,g,direction,count+1)
+        else:
+            return False
+        
+    def right(i,g,direction=True,count=1):
+        if i+8 <= 63:
+            if not g[i+8].is_occupied() or not g[i+8].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i+8].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i+8].is_occupied() and not g[i+8].is_player(): 
+                direction = True
+                for x in range(target_index,i+8,8):
+                    g[x].flip()
+                print('r')
+                return direction
+            elif g[i+8].is_occupied() and g[i+8].is_player(): 
+                return right(i+8,g,direction,count+1)
+        else:
+            return False
+        
+    def upward_right(i,g,direction=True,count=1):
+        if i+9 <= 63:
+            if not g[i+9].is_occupied() or not g[i+9].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i+9].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i+9].is_occupied() and not g[i+9].is_player(): 
+                direction = True
+                for x in range(target_index,i+9,9):
+                    g[x].flip()
+                return direction
+            elif g[i+9].is_occupied() and g[i+9].is_player(): 
+                return upward_right(i+9,g,direction,count+1)
+        else:
+            return False
+        
+    def downward_right(i,g,direction=True,count=1):
+        if i+7 <= 63:
+            if not g[i+7].is_occupied() or not g[i+7].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i+7].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i+7].is_occupied() and not g[i+7].is_player(): 
+                direction = True
+                for x in range(target_index,i+7,7):
+                    g[x].flip()
+                return direction
+            elif g[i+7].is_occupied() and g[i+7].is_player(): 
+                return downward_right(i+7,g,direction,count+1)
+        else:
+            return False
+        
+    def upward_left(i,g,direction=True,count=1):
+        if i-7 >= 0:
+            if not g[i-7].is_occupied() or not g[i-7].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i-7].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i-7].is_occupied() and not g[i-7].is_player(): 
+                direction = True
+                for x in range(i,target_index,7):
+                    g[x].flip()
+                return direction
+            elif g[i-7].is_occupied() and g[i-7].is_player(): 
+                return upward_left(i-7,g,direction,count+1)
+        else:
+            return False
+        
+    def downward_left(i,g,direction=True,count=1):
+        if i-9 >= 0:
+            if not g[i-9].is_occupied() or not g[i-9].is_player() and count == 1: 
+                direction = False
+                return direction
+            elif not g[i-9].is_occupied() and count >= 2: 
+                direction = False
+                return direction
+            elif g[i-9].is_occupied() and not g[i-9].is_player(): 
+                direction = True
+                for x in range(i,target_index,9):
+                    g[x].flip()
+                return direction
+            elif g[i-9].is_occupied() and g[i-9].is_player(): 
+                return downward_left(i-9,g,direction,count+1)
+        else:
+            return False
+    
+    available = 0
+    if upward(target_index, obj_group): 
+        available += 1
+    if downward(target_index, obj_group): 
+        available += 1
+    if left(target_index, obj_group): 
+        available += 1
+    if right(target_index, obj_group): 
+        available += 1
+    if upward_right(target_index, obj_group): 
+        available += 1
+    if downward_right(target_index, obj_group): 
+        available += 1
+    if upward_left(target_index, obj_group): 
+        available += 1
+    if downward_left(target_index, obj_group): 
+        available += 1
+    
+    if available >= 1:
+        obj_group[target_index].opp_turn()
+        return True
+    else:
+        return False
 
 pygame.init()
 screen = pygame.display.set_mode((1600,900))
 pygame.display.set_caption('AIthello')
 clock = pygame.time.Clock()
 game_active = False
+player_turn = True
 menu = True
 rules_menu = False
 music_playing = False
@@ -355,18 +699,15 @@ piece_w_rect = piece_b.get_rect(center = (750,500))
 player = pygame.sprite.GroupSingle()
 player.add(Player())
 
-'''
-
-'''
-board = pygame.sprite.Group()
+board = []
 for x in range(1,9):
     for y in range(1,9):
         if (x == 4 and y == 4) or (x == 5 and y == 5):
-            board.add(Tile(x, y, True, True))
+            board.append(Tile(x, y, True, True))
         elif (x == 4 and y == 5) or (x == 5 and y == 4):
-            board.add(Tile(x, y, True, False))
+            board.append(Tile(x, y, True, False))
         else:
-            board.add(Tile(x, y, False, False))
+            board.append(Tile(x, y, False, False))
 
 
 circle_timer = pygame.USEREVENT + 1
@@ -387,13 +728,25 @@ while True:
                 if surrender_rect.collidepoint(event.pos):
                     menu = True
                     game_active = False
+                    board = []
+                    for x in range(1,9):
+                        for y in range(1,9):
+                            if (x == 4 and y == 4) or (x == 5 and y == 5):
+                                board.append(Tile(x, y, True, True))
+                            elif (x == 4 and y == 5) or (x == 5 and y == 4):
+                                board.append(Tile(x, y, True, False))
+                            else:
+                                board.append(Tile(x, y, False, False))
                     break
 
                 else:
                     for x in range(0,63): # Cycles through board group using INDEX
-                        if board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied():
-                            placeable(x,board)
-                                
+                        if board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and player_turn:
+                            if placeable(x,board):
+                                player_turn = not player_turn
+                        elif board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and not player_turn:
+                            if placeable_opp(x,board):
+                                player_turn = not player_turn
                             # for y in board:
                             #     if y.get_x() in [x.get_x(), x.get_x()-1, x.get_x()+1] and y.get_y() in [x.get_y(), x.get_y()-1, x.get_y()+1] and not y.get_side() and y.get_occupied():
                             #         '''
@@ -470,8 +823,9 @@ while True:
 
         player.update()
 
-        board.draw(screen)
-        board.update()
+        for x in board:
+            x.update()
+            x.display()
 
         # screen.blit(piece_b,piece_b_rect)
 
