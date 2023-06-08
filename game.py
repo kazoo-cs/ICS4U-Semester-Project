@@ -73,22 +73,23 @@ from time import time
 #     def update(self):
 #         self.display_piece()
 
-class Player(pygame.sprite.Sprite):
+class Player:
     def __init__(self):
         super().__init__()
         global event, player_turn, board
         self.turn = 0
         self.turn_display = arial_font.render(f'Turn: {self.turn}',False,'Black')
         self.turn_display_rect = self.turn_display.get_rect(center = (200,400))
+
         self.piece_num = 0
         self.piece_num_display = arial_font.render(f'Pieces: {self.piece_num}',False,'Black')
         self.piece_num_rect = self.piece_num_display.get_rect(center = (200,500))
+
         if player_turn:
             self.turn_side = arial_font.render(f'Turn: Player',False,'Black')
         else:
             self.turn_side = arial_font.render(f'Turn: Opponent',False,'Black')
         self.turn_side_rect = self.turn_side.get_rect(center = (200,600))
-        self.test = True
 
     def display_turn(self):
         self.turn_display = arial_font.render(f'Turn: {self.turn}',False,'Black')
@@ -104,31 +105,34 @@ class Player(pygame.sprite.Sprite):
         screen.blit(self.turn_side,self.turn_side_rect)
 
     def display_piece_num(self):
+        self.piece_num_display = arial_font.render(f'Pieces: {self.get_pieces()}',False,'Black')
+        screen.blit(self.piece_num_display,self.piece_num_rect)
+
+    def get_pieces(self):
         self.piece_num = 0
         for x in board:
             if x.is_player():
                 self.piece_num += 1
-        self.piece_num_display = arial_font.render(f'Pieces: {self.piece_num}',False,'Black')
-        screen.blit(self.piece_num_display,self.piece_num_rect)
         return self.piece_num
+    
+    def get_opp_pieces(self):
+        y = 0
+        for x in board:
+            if x.is_occupied() and not x.is_player():
+                y += 1
+        return y
+    
+    def get_total_occupied(self):
+        x = 0
+        for y in board:
+            if y.is_occupied():
+                x += 1
+        return x
 
-    def player_input(self):
-        if self.test:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                self.test = False
-                self.turn += 1
-        else:
-            if event.type == pygame.MOUSEBUTTONUP:
-                self.test = True
-
-    def pieces(self):
-        return 
-
-    def surrender(self):
-         pass
+    def finish_turn(self):
+        self.turn += 1
 
     def update(self):
-        self.player_input()
         self.display_turn()
         self.display_piece_num()
         self.display_side()
@@ -211,13 +215,6 @@ class Tile:
             self.image = pygame.image.load('graphics/tile_b.png').convert()
             self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
         
-            
-
-    # def update(self):
-    #     pass
-        
-
-        
 
 
 def circle_animation(circle_list):
@@ -243,17 +240,6 @@ def rules_text_display(rule_list):
     for rule_text in rule_list:
         screen.blit(rule_text,rule_text.get_rect(midleft = (50, y)))
         y += 100
-
-# def pieces_display(piece_dict):
-#     global piece_b,piece_w
-
-#     i = -1
-#     for piece_rect in piece_dict:
-#         i += 1
-#         if i % 2 == 0:
-#             screen.blit(piece_b,piece_dict[i])
-#         else:
-#             screen.blit(piece_w,piece_dict[i])
 
 def placeable(target_index, obj_group):
     '''
@@ -301,7 +287,10 @@ def placeable(target_index, obj_group):
                     g[x].flip()
                 return direction
             elif g[i+1].is_occupied() and not g[i+1].is_player(): # If enemy piece on 1+ checks, RECURSIONNNN
-                return upward(i+1,g,direction,count+1)
+                if ((i+1)-7)%8 == 0:
+                    return False
+                else:
+                    return upward(i+1,g,direction,count+1)
         else:
             return False
             
@@ -319,7 +308,10 @@ def placeable(target_index, obj_group):
                     g[x].flip()
                 return direction
             elif g[i-1].is_occupied() and not g[i-1].is_player(): 
-                return downward(i-1,g,direction,count+1)
+                if (i-1)%8 == 0:
+                    return False
+                else:
+                    return downward(i-1,g,direction,count+1)
         else:
             return False
         
@@ -336,7 +328,7 @@ def placeable(target_index, obj_group):
                 for x in range(i,target_index,8):
                     g[x].flip()
                 return direction
-            elif g[i-8].is_occupied() and not g[i-8].is_player(): 
+            elif g[i-8].is_occupied() and not g[i-8].is_player():
                 return left(i-8,g,direction,count+1)
         else:
             return False
@@ -353,7 +345,6 @@ def placeable(target_index, obj_group):
                 direction = True
                 for x in range(target_index,i+8,8):
                     g[x].flip()
-                print('r')
                 return direction
             elif g[i+8].is_occupied() and not g[i+8].is_player(): 
                 return right(i+8,g,direction,count+1)
@@ -374,7 +365,10 @@ def placeable(target_index, obj_group):
                     g[x].flip()
                 return direction
             elif g[i+9].is_occupied() and not g[i+9].is_player(): 
-                return upward_right(i+9,g,direction,count+1)
+                if ((i+1)-7)%8 == 0:
+                    return False
+                else:
+                    return upward_right(i+9,g,direction,count+1)
         else:
             return False
         
@@ -392,7 +386,10 @@ def placeable(target_index, obj_group):
                     g[x].flip()
                 return direction
             elif g[i+7].is_occupied() and not g[i+7].is_player(): 
-                return downward_right(i+7,g,direction,count+1)
+                if (i-1)%8 == 0:
+                    return False
+                else:
+                    return downward_right(i+7,g,direction,count+1)
         else:
             return False
         
@@ -410,7 +407,10 @@ def placeable(target_index, obj_group):
                     g[x].flip()
                 return direction
             elif g[i-7].is_occupied() and not g[i-7].is_player(): 
-                return upward_left(i-7,g,direction,count+1)
+                if ((i+1)-7)%8 == 0:
+                    return False
+                else:
+                    return upward_left(i-7,g,direction,count+1)
         else:
             return False
         
@@ -428,29 +428,55 @@ def placeable(target_index, obj_group):
                     g[x].flip()
                 return direction
             elif g[i-9].is_occupied() and not g[i-9].is_player(): 
-                return downward_left(i-9,g,direction,count+1)
+                if (i-1)%8 == 0:
+                    return False
+                else:
+                    return downward_left(i-9,g,direction,count+1)
+                
         else:
-            print('F5')
             return False
-        
-    available = 0
-    if upward(target_index, obj_group): 
-        available += 1
-    if downward(target_index, obj_group): 
-        available += 1
-    if left(target_index, obj_group): 
-        available += 1
-    if right(target_index, obj_group): 
-        available += 1
-    if upward_right(target_index, obj_group): 
-        available += 1
-    if downward_right(target_index, obj_group): 
-        available += 1
-    if upward_left(target_index, obj_group): 
-        available += 1
-    if downward_left(target_index, obj_group): 
-        available += 1
     
+    available = 0
+    if target_index % 8 == 0: # bottom row
+        if upward(target_index, obj_group): 
+            available += 1
+        if left(target_index, obj_group): 
+            available += 1
+        if right(target_index, obj_group): 
+            available += 1
+        if upward_right(target_index, obj_group):
+            available += 1
+        if upward_left(target_index, obj_group):
+            available += 1
+    elif (target_index-7)%8 == 0: # top row
+        if downward(target_index, obj_group): 
+            available += 1
+        if left(target_index, obj_group): 
+            available += 1
+        if right(target_index, obj_group): 
+            available += 1
+        if downward_right(target_index, obj_group): 
+            available += 1
+        if downward_left(target_index, obj_group): 
+            available += 1
+    else:
+        if upward(target_index, obj_group): 
+            available += 1
+        if downward(target_index, obj_group): 
+            available += 1
+        if left(target_index, obj_group): 
+            available += 1
+        if right(target_index, obj_group): 
+            available += 1
+        if upward_right(target_index, obj_group): 
+            available += 1
+        if downward_right(target_index, obj_group): 
+            available += 1
+        if upward_left(target_index, obj_group): 
+            available += 1
+        if downward_left(target_index, obj_group): 
+            available += 1
+        
     if available >= 1:
         obj_group[target_index].player_turn()
         return True
@@ -473,7 +499,10 @@ def placeable_opp(target_index, obj_group):
                     g[x].flip()
                 return direction
             elif g[i+1].is_occupied() and g[i+1].is_player(): # If enemy piece on 1+ checks, RECURSIONNNN
-                return upward(i+1,g,direction,count+1)
+                if ((i+1)-7)%8 == 0:
+                    return False
+                else:
+                    return upward(i+1,g,direction,count+1)
         else:
             return False
             
@@ -491,7 +520,10 @@ def placeable_opp(target_index, obj_group):
                     g[x].flip()
                 return direction
             elif g[i-1].is_occupied() and g[i-1].is_player(): 
-                return downward(i-1,g,direction,count+1)
+                if (i-1)%8 == 0:
+                    return False
+                else:
+                    return downward(i-1,g,direction,count+1)
         else:
             return False
         
@@ -525,7 +557,6 @@ def placeable_opp(target_index, obj_group):
                 direction = True
                 for x in range(target_index,i+8,8):
                     g[x].flip()
-                print('r')
                 return direction
             elif g[i+8].is_occupied() and g[i+8].is_player(): 
                 return right(i+8,g,direction,count+1)
@@ -546,7 +577,10 @@ def placeable_opp(target_index, obj_group):
                     g[x].flip()
                 return direction
             elif g[i+9].is_occupied() and g[i+9].is_player(): 
-                return upward_right(i+9,g,direction,count+1)
+                if ((i+1)-7)%8 == 0:
+                    return False
+                else:
+                    return upward_right(i+9,g,direction,count+1)
         else:
             return False
         
@@ -564,7 +598,10 @@ def placeable_opp(target_index, obj_group):
                     g[x].flip()
                 return direction
             elif g[i+7].is_occupied() and g[i+7].is_player(): 
-                return downward_right(i+7,g,direction,count+1)
+                if (i-1)%8 == 0:
+                    return False
+                else:
+                    return downward_right(i+7,g,direction,count+1)
         else:
             return False
         
@@ -582,7 +619,10 @@ def placeable_opp(target_index, obj_group):
                     g[x].flip()
                 return direction
             elif g[i-7].is_occupied() and g[i-7].is_player(): 
-                return upward_left(i-7,g,direction,count+1)
+                if ((i+1)-7)%8 == 0:
+                    return False
+                else:
+                    return upward_left(i-7,g,direction,count+1)
         else:
             return False
         
@@ -599,28 +639,55 @@ def placeable_opp(target_index, obj_group):
                 for x in range(i,target_index,9):
                     g[x].flip()
                 return direction
-            elif g[i-9].is_occupied() and g[i-9].is_player(): 
-                return downward_left(i-9,g,direction,count+1)
+            elif g[i-9].is_occupied() and g[i-9].is_player():
+                if (i-1)%8 == 0:
+                    return False
+                else: 
+                    return downward_left(i-9,g,direction,count+1)
         else:
             return False
     
     available = 0
-    if upward(target_index, obj_group): 
-        available += 1
-    if downward(target_index, obj_group): 
-        available += 1
-    if left(target_index, obj_group): 
-        available += 1
-    if right(target_index, obj_group): 
-        available += 1
-    if upward_right(target_index, obj_group): 
-        available += 1
-    if downward_right(target_index, obj_group): 
-        available += 1
-    if upward_left(target_index, obj_group): 
-        available += 1
-    if downward_left(target_index, obj_group): 
-        available += 1
+    if target_index % 8 == 0: # bottom row
+        if upward(target_index, obj_group): 
+            available += 1
+        if left(target_index, obj_group): 
+            available += 1
+        if right(target_index, obj_group): 
+            available += 1
+        if upward_right(target_index, obj_group):
+            available += 1
+        if upward_left(target_index, obj_group):
+            available += 1
+    elif (target_index-7)%8 == 0: # top row
+        if downward(target_index, obj_group): 
+            available += 1
+        if left(target_index, obj_group): 
+            available += 1
+        if right(target_index, obj_group): 
+            available += 1
+        if downward_right(target_index, obj_group): 
+            available += 1
+        if downward_left(target_index, obj_group): 
+            available += 1
+    else:
+        if upward(target_index, obj_group): 
+            available += 1
+        if downward(target_index, obj_group): 
+            available += 1
+        if left(target_index, obj_group): 
+            available += 1
+        if right(target_index, obj_group): 
+            available += 1
+        if upward_right(target_index, obj_group): 
+            available += 1
+        if downward_right(target_index, obj_group): 
+            available += 1
+        if upward_left(target_index, obj_group): 
+            available += 1
+        if downward_left(target_index, obj_group): 
+            available += 1
+    
     
     if available >= 1:
         obj_group[target_index].opp_turn()
@@ -636,6 +703,7 @@ game_active = False
 player_turn = True
 menu = True
 rules_menu = False
+score_screen = False
 music_playing = False
 
 # MENU VARIABLES
@@ -653,6 +721,8 @@ title_rect = title.get_rect(center = (800,150))
 arial_font_2 = pygame.font.Font('font/Arialn.ttf',50)
 play_msg = arial_font_2.render('Tap to play!',True,'Red')
 play_msg_rect = play_msg.get_rect(midtop = (800, 450))
+exit_button = arial_font_2.render('X',True,'Red')
+exit_rect = exit_button.get_rect(topright = (1580,20))
 
 # RULES VARIABLES
 
@@ -685,19 +755,16 @@ bg_music.set_volume(0.5)
 surrender_surf = pygame.image.load('graphics/surrender.png').convert()
 surrender_rect = surrender_surf.get_rect(center = (120,70))
 
+skip_surf = pygame.image.load('graphics/skip.png').convert()
+skip_rect = skip_surf.get_rect(center = (120,190))
+
 piece_b = pygame.image.load('graphics/piece_1.png').convert_alpha()
 piece_b_rect = piece_b.get_rect(center = (750,400))
 
 piece_w = pygame.image.load('graphics/piece_2.png').convert_alpha()
 piece_w_rect = piece_b.get_rect(center = (750,500))
 
-# pieces_list = [piece_b_rect, 
-#           piece_w_rect, 
-#           piece_b.get_rect(center = (850,500)),
-#           piece_w.get_rect(center = (850,400))]
-
-player = pygame.sprite.GroupSingle()
-player.add(Player())
+player = Player()
 
 board = []
 for x in range(1,9):
@@ -709,6 +776,13 @@ for x in range(1,9):
         else:
             board.append(Tile(x, y, False, False))
 
+# Score screen variables
+
+retry_surf = pygame.image.load('graphics/retry.png').convert()
+retry_rect = retry_surf.get_rect(center = (400,700))
+
+exit_to_menu = pygame.image.load('graphics/menu.png').convert()
+menu_exit_rect = exit_to_menu.get_rect(center = (1200,700))
 
 circle_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(circle_timer, 600)
@@ -726,43 +800,32 @@ while True:
         if game_active:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if surrender_rect.collidepoint(event.pos):
-                    menu = True
+                    menu = False
                     game_active = False
-                    board = []
-                    for x in range(1,9):
-                        for y in range(1,9):
-                            if (x == 4 and y == 4) or (x == 5 and y == 5):
-                                board.append(Tile(x, y, True, True))
-                            elif (x == 4 and y == 5) or (x == 5 and y == 4):
-                                board.append(Tile(x, y, True, False))
-                            else:
-                                board.append(Tile(x, y, False, False))
-                    break
-
+                    score_screen = True
+                elif skip_rect.collidepoint(event.pos):
+                    player_turn = not player_turn
+                    player.finish_turn()
                 else:
-                    for x in range(0,63): # Cycles through board group using INDEX
+                    for x in range(0,64): # Cycles through board group using INDEX
                         if board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and player_turn:
                             if placeable(x,board):
+                                player.finish_turn()
                                 player_turn = not player_turn
                         elif board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and not player_turn:
                             if placeable_opp(x,board):
+                                player.finish_turn()
                                 player_turn = not player_turn
-                            # for y in board:
-                            #     if y.get_x() in [x.get_x(), x.get_x()-1, x.get_x()+1] and y.get_y() in [x.get_y(), x.get_y()-1, x.get_y()+1] and not y.get_side() and y.get_occupied():
-                            #         '''
-                            #         Currently has object 'y' that is said to be in contact with the PLACED PIECE
-                            #         There are 8 tiles adjacent
-                                    
-                            #         '''
-                            #         x_diff = y.get_x() - x.get_x()
-                            #         y_diff = y.get_y() - x.get_y()
-                            #         x.player_turn()
-                                    
+            if player.get_total_occupied() == 64:
+                game_active = False
+                score_screen = True
+            if player.get_pieces() == 0:
+                game_active = False
+                score_screen = True
+            if player.get_opp_pieces() == 0:
+                game_active = False
+                score_screen = True
                             
-
-            
-            
-                
         if menu:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if rules_rect.collidepoint(event.pos):
@@ -776,7 +839,11 @@ while True:
                         bg_music.play(loops = -1)
                     else:
                         bg_music.stop()
-                
+
+                elif exit_rect.collidepoint(event.pos):
+                    pygame.quit()
+                    exit()
+
                 else:
                     menu = False
                     game_active = True
@@ -792,47 +859,83 @@ while True:
                 menu = True
                 rules_menu = False
 
-        else:
-            pass
+        if score_screen:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if retry_rect.collidepoint(event.pos):
+                    score_screen = False
+                    game_active = True
+                    player = Player()
+                    board = []
+                    for x in range(1,9):
+                        for y in range(1,9):
+                            if (x == 4 and y == 4) or (x == 5 and y == 5):
+                                board.append(Tile(x, y, True, True))
+                            elif (x == 4 and y == 5) or (x == 5 and y == 4):
+                                board.append(Tile(x, y, True, False))
+                            else:
+                                board.append(Tile(x, y, False, False))
+                    
+                if menu_exit_rect.collidepoint(event.pos):
+                    score_screen = False
+                    menu = True
+                    player = Player()
+                    board = []
+                    for x in range(1,9):
+                        for y in range(1,9):
+                            if (x == 4 and y == 4) or (x == 5 and y == 5):
+                                board.append(Tile(x, y, True, True))
+                            elif (x == 4 and y == 5) or (x == 5 and y == 4):
+                                board.append(Tile(x, y, True, False))
+                            else:
+                                board.append(Tile(x, y, False, False))
+                    pass
+            
 
     if menu:
-
         screen.fill('Green')
         circle_animation(circles)
         circle_animation_2(circles2)
         screen.blit(title,title_rect)
         screen.blit(play_msg,play_msg_rect)
         screen.blit(rules, rules_rect)
+        screen.blit(exit_button,exit_rect)
         if music_playing:
             screen.blit(music_button, music_rect)
         else: 
             screen.blit(music_button_2, music_rect)
 
     if rules_menu:
-        
         screen.fill('White')
         rules_text_display(rules_texts)
 
     if game_active:
-
         screen.fill('White')
-        # screen.blit(board_surf,board_rect)
         screen.blit(surrender_surf,surrender_rect)
-
-        # pieces_display(pieces)
+        screen.blit(skip_surf,skip_rect)
 
         player.update()
 
         for x in board:
             x.update()
             x.display()
-
-        # screen.blit(piece_b,piece_b_rect)
-
-
-
-
-        
-
+    if score_screen:
+        if player.get_pieces() == player.get_opp_pieces():
+            #draw 
+            screen.fill('Yellow')
+            end_msg = arial_font.render(f'Draw!',True,'White')
+            pass
+        elif player.get_pieces() > player.get_opp_pieces():
+            #win
+            screen.fill('Green')
+            end_msg = arial_font.render(f'Player won with a difference of {player.get_pieces() - player.get_opp_pieces()}',True,'White') 
+            pass
+        else:
+            #loss
+            screen.fill('Red')
+            end_msg = arial_font.render(f'Player lost with a difference of {player.get_opp_pieces() - player.get_pieces()}',True,'White')
+            pass
+        screen.blit(end_msg,end_msg.get_rect(center = (800,450)))
+        screen.blit(retry_surf,retry_rect)
+        screen.blit(exit_to_menu,menu_exit_rect)
     pygame.display.update()
     clock.tick(60)
