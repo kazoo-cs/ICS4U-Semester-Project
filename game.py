@@ -3,7 +3,7 @@ from sys import exit
 from random import randint,choice
 from time import time
 
-class Player:
+class Game:
     def __init__(self):
         super().__init__()
         global event, player_turn, board
@@ -12,7 +12,7 @@ class Player:
         self.turn_display_rect = self.turn_display.get_rect(center = (200,400))
 
         self.piece_num = 0
-        self.piece_num_display = arial_font_40.render(f'Pieces: {self.piece_num}',False,'Black')
+        self.piece_num_display = arial_font_40.render(f'Black pieces: {self.piece_num}',False,'Black')
         self.piece_num_rect = self.piece_num_display.get_rect(center = (200,500))
 
         if player_turn:
@@ -35,7 +35,7 @@ class Player:
         screen.blit(self.turn_side,self.turn_side_rect)
 
     def display_piece_num(self):
-        self.piece_num_display = arial_font_40.render(f'Pieces: {self.get_pieces()}',False,'Black')
+        self.piece_num_display = arial_font_40.render(f'Black pieces: {self.get_pieces()}',False,'Black')
         screen.blit(self.piece_num_display,self.piece_num_rect)
 
     def get_pieces(self):
@@ -88,28 +88,28 @@ class Tile:
                 self.image = pygame.image.load('graphics/tile_w.png').convert()
         else:
             self.image = pygame.image.load('graphics/tile.png').convert()
-        self.rect = self.image.get_rect(center = (450+100*x, 900-(y*100)))
+        self.rect = self.image.get_rect(center = (350+100*x, 900-(y*100)))
 
 
     def player_turn(self):
         if self.occupied:
             self.image = pygame.image.load('graphics/tile_b.png').convert()
-            self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
+            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
             self.player_piece = True
         else:
             self.image = pygame.image.load('graphics/tile_b.png').convert()
-            self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
+            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
             self.occupied = True
             self.player_piece = True
 
     def opp_turn(self):
         if self.occupied:
             self.image = pygame.image.load('graphics/tile_w.png').convert()
-            self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
+            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
             self.player_piece = False
         else:
             self.image = pygame.image.load('graphics/tile_w.png').convert()
-            self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
+            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
             self.occupied = True
             self.player_piece = False
 
@@ -140,10 +140,11 @@ class Tile:
     def update(self):
         if self.player_piece == False and self.occupied:
             self.image = pygame.image.load('graphics/tile_w.png').convert()
-            self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
+            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
         elif self.player_piece == True and self.occupied:
             self.image = pygame.image.load('graphics/tile_b.png').convert()
-            self.rect = self.image.get_rect(center = (450+100*self.x, 900-(self.y*100)))
+            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
+        self.display()
         
 
 
@@ -625,6 +626,23 @@ def placeable_opp(target_index, obj_group):
     else:
         return False
 
+def progress_line(): 
+    global game, prog_b, prog_w
+    b = game.get_pieces()
+    w = game.get_opp_pieces()
+    p_b = int(b / (b+w) * 100)
+    p_w = 100 - p_b
+    '''
+    width 50, height 8
+    start from y 50
+    x fixated at 1400
+    (midtop)
+    '''
+    for y in range(p_b):
+        screen.blit(prog_b,prog_b.get_rect(midtop = (1400, 50+y*8)))
+    for x in range(p_w):
+        screen.blit(prog_w,prog_w.get_rect(midtop = (1400, 50+(p_b*8)+x*8)))
+
 pygame.init()
 screen = pygame.display.set_mode((1600,900))
 pygame.display.set_caption('AIthello')
@@ -681,6 +699,8 @@ bg_music.set_volume(0.5)
 # board_surf = pygame.image.load('graphics/board.png').convert()
 # board_rect = board_surf.get_rect(center = (800, 450))
 
+prog_b = pygame.image.load('graphics/progress_b.png').convert()
+prog_w = pygame.image.load('graphics/progress_w.png').convert()
 
 surrender_surf = pygame.image.load('graphics/surrender.png').convert()
 surrender_rect = surrender_surf.get_rect(center = (120,70))
@@ -688,7 +708,7 @@ surrender_rect = surrender_surf.get_rect(center = (120,70))
 skip_surf = pygame.image.load('graphics/skip.png').convert()
 skip_rect = skip_surf.get_rect(center = (120,190))
 
-player = Player()
+game = Game()
 
 board = []
 for x in range(1,9):
@@ -731,24 +751,24 @@ while True:
                     score_screen = True
                 elif skip_rect.collidepoint(event.pos):
                     player_turn = not player_turn
-                    player.finish_turn()
+                    game.finish_turn()
                 else:
                     for x in range(0,64): # Cycles through board group using INDEX
                         if board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and player_turn:
                             if placeable(x,board):
-                                player.finish_turn()
+                                game.finish_turn()
                                 player_turn = not player_turn
                         elif board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and not player_turn:
                             if placeable_opp(x,board):
-                                player.finish_turn()
+                                game.finish_turn()
                                 player_turn = not player_turn
-            if player.get_total_occupied() == 64:
+            if game.get_total_occupied() == 64:
                 game_active = False
                 score_screen = True
-            if player.get_pieces() == 0:
+            if game.get_pieces() == 0:
                 game_active = False
                 score_screen = True
-            if player.get_opp_pieces() == 0:
+            if game.get_opp_pieces() == 0:
                 game_active = False
                 score_screen = True
                             
@@ -790,7 +810,7 @@ while True:
                 if retry_rect.collidepoint(event.pos):
                     score_screen = False
                     game_active = True
-                    player = Player()
+                    game = Game()
                     board = []
                     for x in range(1,9):
                         for y in range(1,9):
@@ -804,7 +824,7 @@ while True:
                 if menu_exit_rect.collidepoint(event.pos):
                     score_screen = False
                     menu = True
-                    player = Player()
+                    game= Game()
                     board = []
                     for x in range(1,9):
                         for y in range(1,9):
@@ -835,31 +855,32 @@ while True:
         rules_text_display(rules_texts)
 
     if game_active:
-        screen.fill('White')
+        screen.fill('Purple')
         screen.blit(surrender_surf,surrender_rect)
         screen.blit(skip_surf,skip_rect)
 
-        player.update()
+        game.update()
 
         for x in board:
             x.update()
-            x.display()
+
+        progress_line()
 
     if score_screen:
-        if player.get_pieces() == player.get_opp_pieces():
+        if game.get_pieces() == game.get_opp_pieces():
             #draw 
             screen.fill('Yellow')
             end_msg = arial_font_100.render(f'Draw!',True,'White')
             pass
-        elif player.get_pieces() > player.get_opp_pieces():
+        elif game.get_pieces() > game.get_opp_pieces():
             #win
             screen.fill('Green')
-            end_msg = arial_font_100.render(f'Player won with a difference of {player.get_pieces() - player.get_opp_pieces()}',True,'White') 
+            end_msg = arial_font_100.render(f'Player won with a difference of {game.get_pieces() - game.get_opp_pieces()}',True,'White') 
             pass
         else:
             #loss
             screen.fill('Red')
-            end_msg = arial_font_100.render(f'Player lost with a difference of {player.get_opp_pieces() - player.get_pieces()}',True,'White')
+            end_msg = arial_font_100.render(f'Player lost with a difference of {game.get_opp_pieces() - game.get_pieces()}',True,'White')
             pass
         screen.blit(end_msg,end_msg.get_rect(center = (800,400)))
         screen.blit(retry_surf,retry_rect)
