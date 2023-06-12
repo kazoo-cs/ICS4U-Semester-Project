@@ -1,7 +1,7 @@
 import pygame
+import sys
 from sys import exit
-from random import randint,choice
-from time import time
+from random import randint
 
 class Game:
     def __init__(self):
@@ -75,7 +75,7 @@ class Opponent(pygame.sprite.Sprite):
 
 class Tile:
     def __init__(self, x, y, is_occupied, is_player):
-        global event
+        global event, devil_mode
         # tile stuff
         self.x = x
         self.y = y
@@ -83,35 +83,33 @@ class Tile:
         self.player_piece = is_player
         if self.occupied:
             if self.player_piece:
-                self.image = pygame.image.load('graphics/tile_b.png').convert()
+                if devil_mode: self.image = pygame.image.load('graphics/tile_b_2.png').convert()
+                else: self.image = pygame.image.load('graphics/tile_b.png').convert()
             else:
-                self.image = pygame.image.load('graphics/tile_w.png').convert()
+                if devil_mode: self.image = pygame.image.load('graphics/tile_w_2.png')
+                else: self.image = pygame.image.load('graphics/tile_w.png').convert()
         else:
-            self.image = pygame.image.load('graphics/tile.png').convert()
+            if devil_mode: self.image = pygame.image.load('graphics/tile_2.png')
+            else: self.image = pygame.image.load('graphics/tile.png').convert()
+
         self.rect = self.image.get_rect(center = (350+100*x, 900-(y*100)))
 
 
     def player_turn(self):
-        if self.occupied:
-            self.image = pygame.image.load('graphics/tile_b.png').convert()
-            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
-            self.player_piece = True
-        else:
-            self.image = pygame.image.load('graphics/tile_b.png').convert()
-            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
+        if devil_mode: self.image = pygame.image.load('graphics/tile_b_2.png').convert()
+        else: self.image = pygame.image.load('graphics/tile_b.png').convert()
+        self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
+        self.player_piece = True
+        if not self.occupied:
             self.occupied = True
-            self.player_piece = True
 
     def opp_turn(self):
-        if self.occupied:
-            self.image = pygame.image.load('graphics/tile_w.png').convert()
-            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
-            self.player_piece = False
-        else:
-            self.image = pygame.image.load('graphics/tile_w.png').convert()
-            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
+        if devil_mode: self.image = pygame.image.load('graphics/tile_w_2.png').convert()
+        else: self.image = pygame.image.load('graphics/tile_w.png').convert()
+        self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
+        self.player_piece = False
+        if not self.occupied:
             self.occupied = True
-            self.player_piece = False
 
     def get_rect(self):
         return self.rect
@@ -138,12 +136,20 @@ class Tile:
         screen.blit(self.image,self.rect)
 
     def update(self):
-        if self.player_piece == False and self.occupied:
-            self.image = pygame.image.load('graphics/tile_w.png').convert()
-            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
-        elif self.player_piece == True and self.occupied:
-            self.image = pygame.image.load('graphics/tile_b.png').convert()
-            self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
+        if devil_mode:
+            if self.player_piece == False and self.occupied: # Enemy piece
+                self.image = pygame.image.load('graphics/tile_w_2.png').convert()
+                self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
+            elif self.player_piece == True and self.occupied: # Player rpiece
+                self.image = pygame.image.load('graphics/tile_b_2.png').convert()
+                self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
+        else:
+            if self.player_piece == False and self.occupied: # Enemy piece
+                self.image = pygame.image.load('graphics/tile_w.png').convert()
+                self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
+            elif self.player_piece == True and self.occupied: # Player rpiece
+                self.image = pygame.image.load('graphics/tile_b.png').convert()
+                self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
         self.display()
         
 
@@ -645,12 +651,18 @@ def progress_line():
 
 pygame.init()
 screen = pygame.display.set_mode((1600,900))
-pygame.display.set_caption('AIthello')
+pygame.display.set_caption('Othello 6.9')
 clock = pygame.time.Clock()
-game_active = False
-player_turn = True
+
+# Program states 
+
 menu = True
 rules_menu = False
+difficulty = False
+devil_mode = False
+game_active = False
+gamble_active = False
+player_turn = True
 score_screen = False
 music_playing = False
 
@@ -694,10 +706,15 @@ music_rect = music_button.get_rect(center = (70, 190))
 bg_music = pygame.mixer.Sound('audio/kurukuru.mp3')
 bg_music.set_volume(0.5)
 
-# GAME VARIABLES
+# DIFFICULTY MENU VARIABLES
 
-# board_surf = pygame.image.load('graphics/board.png').convert()
-# board_rect = board_surf.get_rect(center = (800, 450))
+casual_surf = pygame.image.load('graphics/casual.png').convert()
+casual_rect = casual_surf.get_rect(center = (533,450))
+
+devil_surf = pygame.image.load('graphics/devil.png').convert()
+devil_rect = devil_surf.get_rect(center = (1066,450))
+
+# GAME VARIABLES
 
 prog_b = pygame.image.load('graphics/progress_b.png').convert()
 prog_w = pygame.image.load('graphics/progress_w.png').convert()
@@ -707,6 +724,9 @@ surrender_rect = surrender_surf.get_rect(center = (120,70))
 
 skip_surf = pygame.image.load('graphics/skip.png').convert()
 skip_rect = skip_surf.get_rect(center = (120,190))
+
+gamble_surf = pygame.image.load('graphics/gamble.png').convert()
+gamble_rect = gamble_surf.get_rect(center = (120,310))
 
 game = Game()
 
@@ -730,47 +750,19 @@ retry_rect = retry_surf.get_rect(center = (600,700))
 exit_to_menu = pygame.image.load('graphics/menu.png').convert()
 menu_exit_rect = exit_to_menu.get_rect(center = (1000,700))
 
+# timers
+
 circle_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(circle_timer, 600)
 
 circle_timer_2 = pygame.USEREVENT + 2
 pygame.time.set_timer(circle_timer_2, 600)
 
-
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
-
-        if game_active:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if surrender_rect.collidepoint(event.pos):
-                    menu = False
-                    game_active = False
-                    score_screen = True
-                elif skip_rect.collidepoint(event.pos):
-                    player_turn = not player_turn
-                    game.finish_turn()
-                else:
-                    for x in range(0,64): # Cycles through board group using INDEX
-                        if board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and player_turn:
-                            if placeable(x,board):
-                                game.finish_turn()
-                                player_turn = not player_turn
-                        elif board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and not player_turn:
-                            if placeable_opp(x,board):
-                                game.finish_turn()
-                                player_turn = not player_turn
-            if game.get_total_occupied() == 64:
-                game_active = False
-                score_screen = True
-            if game.get_pieces() == 0:
-                game_active = False
-                score_screen = True
-            if game.get_opp_pieces() == 0:
-                game_active = False
-                score_screen = True
                             
         if menu:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -791,8 +783,8 @@ while True:
                     exit()
 
                 else:
+                    difficulty = True
                     menu = False
-                    game_active = True
 
             if event.type == circle_timer:
                 circles.append(circle_surf.get_rect(center = (-200, randint(0,900))))
@@ -804,6 +796,42 @@ while True:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 menu = True
                 rules_menu = False
+
+        if difficulty:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if casual_rect.collidepoint(event.pos):
+                    difficulty = False
+                    game_active = True
+                    devil_mode = False
+                if devil_rect.collidepoint(event.pos):
+                    difficulty = False
+                    game_active = True
+                    devil_mode = True
+
+        if game_active:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if surrender_rect.collidepoint(event.pos):
+                    game_active = False
+                    score_screen = True
+                elif skip_rect.collidepoint(event.pos):
+                    player_turn = not player_turn
+                    game.finish_turn()
+                # elif gamble_rect.collidepoint(event.pos):
+                #     pass
+
+                else:
+                    for x in range(0,64): # Cycles through board group using INDEX
+                        if board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and player_turn:
+                            if placeable(x,board):
+                                game.finish_turn()
+                                player_turn = not player_turn
+                        elif board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and not player_turn:
+                            if placeable_opp(x,board):
+                                game.finish_turn()
+                                player_turn = not player_turn
+            if game.get_total_occupied() == 64 or game.get_pieces() == 0 or game.get_opp_pieces() == 0:
+                game_active = False
+                score_screen = True
 
         if score_screen:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -854,10 +882,17 @@ while True:
         screen.fill('White')
         rules_text_display(rules_texts)
 
+    if difficulty:
+        screen.fill('Green')
+        screen.blit(casual_surf,casual_rect)
+        screen.blit(devil_surf,devil_rect)
+
     if game_active:
-        screen.fill('Purple')
+        screen.fill('Gray')
         screen.blit(surrender_surf,surrender_rect)
         screen.blit(skip_surf,skip_rect)
+        if devil_mode:
+            screen.blit(gamble_surf,gamble_rect)
 
         game.update()
 
@@ -885,5 +920,6 @@ while True:
         screen.blit(end_msg,end_msg.get_rect(center = (800,400)))
         screen.blit(retry_surf,retry_rect)
         screen.blit(exit_to_menu,menu_exit_rect)
+
     pygame.display.update()
     clock.tick(60)
