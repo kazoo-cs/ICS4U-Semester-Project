@@ -2,36 +2,37 @@ import pygame
 import sys
 from sys import exit
 from random import randint
+import time
 
 class Game:
     def __init__(self):
         super().__init__()
-        global event, player_turn, board
+        global event, player_turn, board, devil_mode
         self.turn = 0
         self.turn_display = arial_font_40.render(f'Turn: {self.turn}',False,'Black')
-        self.turn_display_rect = self.turn_display.get_rect(center = (200,400))
+        if devil_mode: self.turn_display_rect = self.turn_display.get_rect(center = (200,500))
+        else: self.turn_display_rect = self.turn_display.get_rect(center = (200,400))
 
         self.piece_num = 0
         self.piece_num_display = arial_font_40.render(f'Black pieces: {self.piece_num}',False,'Black')
-        self.piece_num_rect = self.piece_num_display.get_rect(center = (200,500))
 
-        if player_turn:
-            self.turn_side = arial_font_40.render(f'Turn: Black',False,'Black')
-        else:
-            self.turn_side = arial_font_40.render(f'Turn: White',False,'Black')
-        self.turn_side_rect = self.turn_side.get_rect(center = (200,600))
+        if devil_mode: self.piece_num_rect = self.piece_num_display.get_rect(center = (200,600))
+        else: self.piece_num_rect = self.piece_num_display.get_rect(center = (200,500))
+
+        if player_turn: self.turn_side = arial_font_40.render(f'Turn: Black',False,'Black')
+        else: self.turn_side = arial_font_40.render(f'Turn: White',False,'Black')
+        if devil_mode: self.turn_side_rect = self.turn_side.get_rect(center = (200,700))
+        else: self.turn_side_rect = self.turn_side.get_rect(center = (200,600))
 
     def display_turn(self):
         self.turn_display = arial_font_40.render(f'Turn: {self.turn}',False,'Black')
         screen.blit(self.turn_display,self.turn_display_rect)
-        return self.turn
     
     def display_side(self):
         if player_turn:
             self.turn_side = arial_font_40.render(f'Turn: Black',False,'Black')
         else:
             self.turn_side = arial_font_40.render(f'Turn: White',False,'Black')
-        self.turn_side_rect = self.turn_side.get_rect(center = (200,600))
         screen.blit(self.turn_side,self.turn_side_rect)
 
     def display_piece_num(self):
@@ -61,6 +62,9 @@ class Game:
 
     def finish_turn(self):
         self.turn += 1
+
+    def get_turn(self):
+        return self.turn
 
     def update(self):
         self.display_turn()
@@ -137,27 +141,17 @@ class Tile:
 
     def update(self):
         if devil_mode:
-            if self.player_piece == False and self.occupied: # Enemy piece
-                self.image = pygame.image.load('graphics/tile_w_2.png').convert()
-                self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
-            elif self.player_piece == True and self.occupied: # Player rpiece
-                self.image = pygame.image.load('graphics/tile_b_2.png').convert()
-                self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
+            if self.player_piece == False and self.occupied: self.image = pygame.image.load('graphics/tile_w_2.png').convert()
+            elif self.player_piece == True and self.occupied: self.image = pygame.image.load('graphics/tile_b_2.png').convert()
         else:
-            if self.player_piece == False and self.occupied: # Enemy piece
-                self.image = pygame.image.load('graphics/tile_w.png').convert()
-                self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
-            elif self.player_piece == True and self.occupied: # Player rpiece
-                self.image = pygame.image.load('graphics/tile_b.png').convert()
-                self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
+            if self.player_piece == False and self.occupied: self.image = pygame.image.load('graphics/tile_w.png').convert()
+            elif self.player_piece == True and self.occupied: self.image = pygame.image.load('graphics/tile_b.png').convert()
         self.display()
         
-
 
 def circle_animation(circle_list):
     for circle_rect in circle_list:
         circle_rect.x += 10
-
         if circle_rect.x > 2000:
             circle_list.remove(circle_rect)
             
@@ -677,7 +671,7 @@ circles = []
 circles2 = []
 
 title = pygame.image.load('graphics/game_title.png').convert_alpha()
-title_rect = title.get_rect(center = (800,150))
+title_rect = title.get_rect(center = (800,200))
 arial_font_50 = pygame.font.Font('font/Arialn.ttf',50)
 play_msg = arial_font_50.render('Tap to play!',True,'Red')
 play_msg_rect = play_msg.get_rect(midtop = (800, 450))
@@ -709,10 +703,10 @@ bg_music.set_volume(0.5)
 # DIFFICULTY MENU VARIABLES
 
 casual_surf = pygame.image.load('graphics/casual.png').convert()
-casual_rect = casual_surf.get_rect(center = (533,450))
+casual_rect = casual_surf.get_rect(center = (500,450))
 
 devil_surf = pygame.image.load('graphics/devil.png').convert()
-devil_rect = devil_surf.get_rect(center = (1066,450))
+devil_rect = devil_surf.get_rect(center = (1100,450))
 
 # GAME VARIABLES
 
@@ -727,18 +721,6 @@ skip_rect = skip_surf.get_rect(center = (120,190))
 
 gamble_surf = pygame.image.load('graphics/gamble.png').convert()
 gamble_rect = gamble_surf.get_rect(center = (120,310))
-
-game = Game()
-
-board = []
-for x in range(1,9):
-    for y in range(1,9):
-        if (x == 4 and y == 4) or (x == 5 and y == 5):
-            board.append(Tile(x, y, True, True))
-        elif (x == 4 and y == 5) or (x == 5 and y == 4):
-            board.append(Tile(x, y, True, False))
-        else:
-            board.append(Tile(x, y, False, False))
 
 # Score screen variables
 
@@ -792,23 +774,47 @@ while True:
             if event.type == circle_timer_2:
                 circles2.append(circle_surf_2.get_rect(center = (1800, randint(0,900))))
 
-        if rules_menu:
+        elif rules_menu:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 menu = True
                 rules_menu = False
 
-        if difficulty:
+        elif difficulty:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if casual_rect.collidepoint(event.pos):
                     difficulty = False
                     game_active = True
                     devil_mode = False
+                    game = Game()
+                    board = []
+                    for x in range(1,9):
+                        for y in range(1,9):
+                            if (x == 4 and y == 4) or (x == 5 and y == 5):
+                                board.append(Tile(x, y, True, True))
+                            elif (x == 4 and y == 5) or (x == 5 and y == 4):
+                                board.append(Tile(x, y, True, False))
+                            else:
+                                board.append(Tile(x, y, False, False))
+        
                 if devil_rect.collidepoint(event.pos):
                     difficulty = False
                     game_active = True
                     devil_mode = True
+                    game = Game()
+                    board = []
+                    for x in range(1,9):
+                        for y in range(1,9):
+                            if (x == 4 and y == 4) or (x == 5 and y == 5):
+                                board.append(Tile(x, y, True, True))
+                            elif (x == 4 and y == 5) or (x == 5 and y == 4):
+                                board.append(Tile(x, y, True, False))
+                            else:
+                                board.append(Tile(x, y, False, False))
+                    
+                    
 
-        if game_active:
+        elif game_active:
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if surrender_rect.collidepoint(event.pos):
                     game_active = False
@@ -816,9 +822,9 @@ while True:
                 elif skip_rect.collidepoint(event.pos):
                     player_turn = not player_turn
                     game.finish_turn()
-                # elif gamble_rect.collidepoint(event.pos):
-                #     pass
-
+                elif gamble_rect.collidepoint(event.pos):
+                    gamble_active = True
+                    pass
                 else:
                     for x in range(0,64): # Cycles through board group using INDEX
                         if board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and player_turn:
@@ -829,11 +835,12 @@ while True:
                             if placeable_opp(x,board):
                                 game.finish_turn()
                                 player_turn = not player_turn
+
             if game.get_total_occupied() == 64 or game.get_pieces() == 0 or game.get_opp_pieces() == 0:
                 game_active = False
                 score_screen = True
 
-        if score_screen:
+        elif score_screen:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if retry_rect.collidepoint(event.pos):
                     score_screen = False
@@ -852,17 +859,6 @@ while True:
                 if menu_exit_rect.collidepoint(event.pos):
                     score_screen = False
                     menu = True
-                    game= Game()
-                    board = []
-                    for x in range(1,9):
-                        for y in range(1,9):
-                            if (x == 4 and y == 4) or (x == 5 and y == 5):
-                                board.append(Tile(x, y, True, True))
-                            elif (x == 4 and y == 5) or (x == 5 and y == 4):
-                                board.append(Tile(x, y, True, False))
-                            else:
-                                board.append(Tile(x, y, False, False))
-                    pass
             
 
     if menu:
@@ -893,9 +889,8 @@ while True:
         screen.blit(skip_surf,skip_rect)
         if devil_mode:
             screen.blit(gamble_surf,gamble_rect)
-
+        
         game.update()
-
         for x in board:
             x.update()
 
@@ -905,17 +900,17 @@ while True:
         if game.get_pieces() == game.get_opp_pieces():
             #draw 
             screen.fill('Yellow')
-            end_msg = arial_font_100.render(f'Draw!',True,'White')
+            end_msg = arial_font_100.render(f'Draw!',True,'Blue')
             pass
         elif game.get_pieces() > game.get_opp_pieces():
             #win
-            screen.fill('Green')
-            end_msg = arial_font_100.render(f'Player won with a difference of {game.get_pieces() - game.get_opp_pieces()}',True,'White') 
+            screen.fill((53,53,53))
+            end_msg = arial_font_100.render(f'Black won with a difference of {game.get_pieces() - game.get_opp_pieces()}',True,'White') 
             pass
         else:
             #loss
-            screen.fill('Red')
-            end_msg = arial_font_100.render(f'Player lost with a difference of {game.get_opp_pieces() - game.get_pieces()}',True,'White')
+            screen.fill(((202,202,202)))
+            end_msg = arial_font_100.render(f'White won with a difference of {game.get_opp_pieces() - game.get_pieces()}',True,'Black')
             pass
         screen.blit(end_msg,end_msg.get_rect(center = (800,400)))
         screen.blit(retry_surf,retry_rect)
