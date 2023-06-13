@@ -1,15 +1,17 @@
 import pygame
 import sys
 from sys import exit
-from random import randint
+from random import randint, choice
 import time
 
 class Game:
     def __init__(self):
         super().__init__()
         global event, player_turn, board, devil_mode
+
         self.turn = 0
         self.turn_display = arial_font_40.render(f'Turn: {self.turn}',False,'Black')
+
         if devil_mode: self.turn_display_rect = self.turn_display.get_rect(center = (200,500))
         else: self.turn_display_rect = self.turn_display.get_rect(center = (200,400))
 
@@ -36,7 +38,10 @@ class Game:
         screen.blit(self.turn_side,self.turn_side_rect)
 
     def display_piece_num(self):
-        self.piece_num_display = arial_font_40.render(f'Black pieces: {self.get_pieces()}',False,'Black')
+        if player_turn:
+            self.piece_num_display = arial_font_40.render(f'Black pieces: {self.get_pieces()}',False,'Black')
+        else:
+            self.piece_num_display = arial_font_40.render(f'White pieces: {self.get_opp_pieces()}',False,'White')
         screen.blit(self.piece_num_display,self.piece_num_rect)
 
     def get_pieces(self):
@@ -71,11 +76,50 @@ class Game:
         self.display_piece_num()
         self.display_side()
 
-class Opponent(pygame.sprite.Sprite):
+class Gamble:
     def __init__(self):
-        super().__init__()
-        pass
+        self.generated_num = choice([1,2,3])
 
+        self.one = pygame.image.load('graphics/one.png').convert_alpha()
+        self.two = pygame.image.load('graphics/two.png').convert_alpha()
+        self.three = pygame.image.load('graphics/three.png').convert_alpha()
+
+        self.one_rect = self.one.get_rect(center = (500,600))
+        self.two_rect = self.two.get_rect(center = (800,600))
+        self.three_rect = self.three.get_rect(center = (1100,600))
+
+        self.font = pygame.font.Font('font/Arialn.ttf',120)
+        self.text = self.font.render('Gamble',False,'Red')
+        self.text_rect = self.text.get_rect(center = (800,300))
+
+        self.bg = pygame.image.load('graphics/gray_bg.png').convert_alpha()
+
+    def get_rect(self,num):
+        if num == 1: return self.one_rect
+        elif num == 2: return self.two_rect
+        elif num == 3: return self.three_rect
+
+    def get_num(self):
+        return self.generated_num
+
+    def player_input(self, input):
+        global gamble_active
+        if input == self.generated_num: 
+            gamble_active = False
+            return True
+        else: 
+            gamble_active = False
+            return False
+
+    def generate_num(self):
+        self.generated_num = choice([1,2,3])
+
+    def display(self):
+        screen.blit(self.bg,self.bg.get_rect(topleft = (0,0)))
+        screen.blit(self.text,self.text_rect)
+        screen.blit(self.one,self.one_rect)
+        screen.blit(self.two,self.two_rect)
+        screen.blit(self.three,self.three_rect)
 
 class Tile:
     def __init__(self, x, y, is_occupied, is_player):
@@ -102,7 +146,6 @@ class Tile:
     def player_turn(self):
         if devil_mode: self.image = pygame.image.load('graphics/tile_b_2.png').convert()
         else: self.image = pygame.image.load('graphics/tile_b.png').convert()
-        self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
         self.player_piece = True
         if not self.occupied:
             self.occupied = True
@@ -110,7 +153,6 @@ class Tile:
     def opp_turn(self):
         if devil_mode: self.image = pygame.image.load('graphics/tile_w_2.png').convert()
         else: self.image = pygame.image.load('graphics/tile_w.png').convert()
-        self.rect = self.image.get_rect(center = (350+100*self.x, 900-(self.y*100)))
         self.player_piece = False
         if not self.occupied:
             self.occupied = True
@@ -150,20 +192,15 @@ class Tile:
         
 
 def circle_animation(circle_list):
-    for circle_rect in circle_list:
+    for circle_rect in circle_list: 
         circle_rect.x += 10
-        if circle_rect.x > 2000:
-            circle_list.remove(circle_rect)
-            
+        if circle_rect.x > 2000: circle_list.remove(circle_rect)
         screen.blit(circle_surf,circle_rect)
 
 def circle_animation_2(circle_list):
-    for circle_rect in circle_list:
+    for circle_rect in circle_list: 
         circle_rect.x -= 10
-
-        if circle_rect.x < -600:
-            circle_list.remove(circle_rect)
-
+        if circle_rect.x < -600: circle_list.remove(circle_rect)
         screen.blit(circle_surf_2,circle_rect)
 
 def rules_text_display(rule_list):
@@ -203,7 +240,6 @@ def placeable(target_index, obj_group):
        Having even ONE DIRECTION marked as TRUE will allow the tile to be OCCUPIED
 
     '''
-
     def upward(i,g,direction=True,count=1):
         if i+1 <= 63:
             if not g[i+1].is_occupied() or g[i+1].is_player() and count == 1: # FIRST CHECK. If EMPTY or is PLAYER, FALSE
@@ -643,9 +679,37 @@ def progress_line():
     for x in range(p_w):
         screen.blit(prog_w,prog_w.get_rect(midtop = (1400, 50+(p_b*8)+x*8)))
 
+def gamble_result(correct):
+    global player_turn, extend_turn
+    time = 1500
+    exit_game = False
+    font = pygame.font.Font('font/Arialn.ttf',120)
+    if correct:
+        extend_turn = 1
+        msg = font.render('Gamble Won',False,'Green')
+    else:
+        player_turn = not player_turn
+        msg = font.render('Gamble Lost',False,'Red')
+
+    while not exit_game:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        
+        screen.blit(msg,msg.get_rect(center = (800,450)))
+        pygame.display.update()
+
+        passed_time = clock.tick(60)
+        time -= passed_time
+        if time <= 0:
+            exit_game = True
+            
+        
+
 pygame.init()
 screen = pygame.display.set_mode((1600,900))
-pygame.display.set_caption('Othello 6.9')
+pygame.display.set_caption('Othelol')
 clock = pygame.time.Clock()
 
 # Program states 
@@ -654,6 +718,7 @@ menu = True
 rules_menu = False
 difficulty = False
 devil_mode = False
+extend_turn = 0
 game_active = False
 gamble_active = False
 player_turn = True
@@ -721,6 +786,11 @@ skip_rect = skip_surf.get_rect(center = (120,190))
 
 gamble_surf = pygame.image.load('graphics/gamble.png').convert()
 gamble_rect = gamble_surf.get_rect(center = (120,310))
+
+# GAMBLE MODE VARIABLES
+
+
+gamble = Gamble()
 
 # Score screen variables
 
@@ -814,27 +884,36 @@ while True:
                     
 
         elif game_active:
-
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if surrender_rect.collidepoint(event.pos):
-                    game_active = False
-                    score_screen = True
-                elif skip_rect.collidepoint(event.pos):
-                    player_turn = not player_turn
-                    game.finish_turn()
-                elif gamble_rect.collidepoint(event.pos):
-                    gamble_active = True
-                    pass
+                if gamble_active:
+                    if gamble.get_rect(1).collidepoint(event.pos):
+                        gamble_result(gamble.player_input(1))
+                    elif gamble.get_rect(2).collidepoint(event.pos):
+                        gamble_result(gamble.player_input(2))
+                    elif gamble.get_rect(3).collidepoint(event.pos):
+                        gamble_result(gamble.player_input(3))
                 else:
-                    for x in range(0,64): # Cycles through board group using INDEX
-                        if board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and player_turn:
-                            if placeable(x,board):
-                                game.finish_turn()
-                                player_turn = not player_turn
-                        elif board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and not player_turn:
-                            if placeable_opp(x,board):
-                                game.finish_turn()
-                                player_turn = not player_turn
+                    if surrender_rect.collidepoint(event.pos):
+                        game_active = False
+                        score_screen = True
+                    elif skip_rect.collidepoint(event.pos):
+                        player_turn = not player_turn
+                        game.finish_turn()
+                    elif gamble_rect.collidepoint(event.pos):
+                        gamble_active = True
+                        gamble.generate_num()
+                    else:
+                        for x in range(0,64): # Cycles through board group using INDEX
+                            if board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and player_turn:
+                                if placeable(x,board):
+                                    game.finish_turn()
+                                    if extend_turn > 0: extend_turn -= 1
+                                    else: player_turn = not player_turn
+                            elif board[x].get_rect().collidepoint(event.pos) and not board[x].is_occupied() and not player_turn:
+                                if placeable_opp(x,board):
+                                    game.finish_turn()
+                                    if extend_turn > 0: extend_turn -= 1
+                                    else: player_turn = not player_turn
 
             if game.get_total_occupied() == 64 or game.get_pieces() == 0 or game.get_opp_pieces() == 0:
                 game_active = False
@@ -889,12 +968,12 @@ while True:
         screen.blit(skip_surf,skip_rect)
         if devil_mode:
             screen.blit(gamble_surf,gamble_rect)
-        
         game.update()
         for x in board:
             x.update()
-
         progress_line()
+        if gamble_active:
+            gamble.display()
 
     if score_screen:
         if game.get_pieces() == game.get_opp_pieces():
