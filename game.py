@@ -2,9 +2,8 @@ import pygame
 import sys
 from sys import exit
 from random import randint, choice
-import time
 
-class Game:
+class Game: # 
     def __init__(self):
         super().__init__()
         global event, player_turn, board, devil_mode
@@ -199,8 +198,8 @@ class Tile:
             if self.player_piece == False and self.occupied: self.image = pygame.image.load('graphics/tile_w.png').convert()
             elif self.player_piece == True and self.occupied: self.image = pygame.image.load('graphics/tile_b.png').convert()
         self.display()
-        
 
+# MENU FUNCTIONS
 def circle_animation(circle_list):
     for circle_rect in circle_list: 
         circle_rect.x += 10
@@ -213,13 +212,16 @@ def circle_animation_2(circle_list):
         if circle_rect.x < -600: circle_list.remove(circle_rect)
         screen.blit(circle_surf_2,circle_rect)
 
+# RULES FUNCTION
 def rules_text_display(rule_list):
-    y = 200
+    y = 50
     for rule_text in rule_list:
         screen.blit(rule_text,rule_text.get_rect(midleft = (50, y)))
-        y += 100
+        y += 82
 
+# GAME FUNCTIONS
 def placeable(target_index, obj_group):
+    global place_sfx
     '''
     Must DETERMINE if clicked tile is available by the player
     It is already known that the tile clicked is UNOCCUPIED
@@ -456,11 +458,13 @@ def placeable(target_index, obj_group):
         
     if available >= 1:
         obj_group[target_index].player_turn()
+        place_sfx.play()
         return True
     else:
         return False
 
 def placeable_opp(target_index, obj_group):
+    global place_sfx
 
     def upward(i,g,direction=True,count=1):
         if i+1 <= 63:
@@ -665,9 +669,9 @@ def placeable_opp(target_index, obj_group):
         if downward_left(target_index, obj_group): 
             available += 1
     
-    
     if available >= 1:
         obj_group[target_index].opp_turn()
+        place_sfx.play()
         return True
     else:
         return False
@@ -720,15 +724,12 @@ def gamble_result(correct):
         if time <= 0:
             exit_game = True
             
-        
-
 pygame.init()
 screen = pygame.display.set_mode((1600,900))
 pygame.display.set_caption('Othelol')
 clock = pygame.time.Clock()
 
-# Program states 
-
+# PROGRAM STATES
 menu = True
 rules_menu = False
 difficulty = False
@@ -741,7 +742,6 @@ score_screen = False
 music_playing = False
 
 # MENU VARIABLES
-
 circle_surf = pygame.image.load('graphics/circle.png').convert_alpha()
 circle_surf_2 = pygame.image.load('graphics/circle2.png').convert_alpha()
 
@@ -759,29 +759,38 @@ exit_button = arial_font_50.render('X',True,'Red')
 exit_rect = exit_button.get_rect(topright = (1580,20))
 
 # RULES VARIABLES
-
 rules = pygame.image.load('graphics/rules.png').convert()
 rules_rect = rules.get_rect(center = (120,70))
 arial_font_40 = pygame.font.Font('font/Arialn.ttf',40)
-rules_text_1 = arial_font_40.render('1. Pieces can be placed as long as there are at least 1 adjacent enemy piece',True,'Black')
-rules_text_2 = arial_font_40.render('2. When placing a piece, opposing pieces that are surrounded vertically, horizontally,',True,'Black')
-rules_text_3 = arial_font_40.render('    and diagonally by two ends including the placed piece are flipped',True,'Black')
-rules_text_4 = arial_font_40.render('3. Player with the most remaining pieces win the game',True,'Black')
-rules_text_5 = arial_font_40.render('4. The 4 corner pieces cannot be flipped (tip)',True,'Black')
-rules_texts = [rules_text_1,rules_text_2,rules_text_3,rules_text_4,rules_text_5]
+rules_text_1 = arial_font_40.render('1) Two players will take opposing colours, Black and White',True,'Black')
+rules_text_2 = arial_font_40.render('2) A piece can only be placed under certain conditions',True,'Black')
+rules_text_3 = arial_font_40.render('2.1) A piece may only be placed when adjacent to an opposing piece',True,'Black')
+rules_text_4 = arial_font_40.render('2.2) The opposing piece must be in between two of your pieces, where one of which is the placed',True,'Black')
+rules_text_5 = arial_font_40.render('2.3) All opposing pieces lying in between the two pieces will be flipped',True,'Black')
+rules_text_6 = arial_font_40.render('3) Game will not end until the one of following ',True,'Black')
+rules_text_7 = arial_font_40.render('3.1) The entire board is occupied with pieces',True,'Black')
+rules_text_8 = arial_font_40.render('3.2) One player\'s pieces no longer exist on the board',True,'Black')
+rules_text_9 = arial_font_40.render('3.3) A player surrenders',True,'Black')
+rules_text_10 = arial_font_40.render('4) A tip! Take control of as many corners as possible.',True,'Black')
+rules_text_11 = arial_font_40.render('5) Winning a gamble in devil mode will either extend your turn by one or flip all pieces.',True,'Black')
+rules_texts = [rules_text_1,rules_text_2,rules_text_3,rules_text_4,rules_text_5,rules_text_6,rules_text_7,rules_text_8,rules_text_9,rules_text_10,rules_text_11]
 rules_text_rect = rules_text_1.get_rect(midleft = (100, 300))
 
-# MUSIC VARIABLES
+guide_surf = pygame.image.load('graphics/guide.png').convert()
+guide_rect = guide_surf.get_rect(center = (1300,600))
 
+# MUSIC/SFX VARIABLES
 music_button = pygame.image.load('graphics/toggle_music.png').convert()
 music_button_2 = pygame.image.load('graphics/toggle_music_2.png').convert()
 music_rect = music_button.get_rect(center = (70, 190))
 
-bg_music = pygame.mixer.Sound('audio/kurukuru.mp3')
+bg_music = pygame.mixer.Sound('audio/music.mp3')
 bg_music.set_volume(0.5)
 
-# DIFFICULTY MENU VARIABLES
+place_sfx = pygame.mixer.Sound('audio/place.mp3')
+place_sfx.set_volume(0.5)
 
+# DIFFICULTY MENU VARIABLES
 casual_surf = pygame.image.load('graphics/casual.png').convert()
 casual_rect = casual_surf.get_rect(center = (500,450))
 
@@ -789,7 +798,6 @@ devil_surf = pygame.image.load('graphics/devil.png').convert()
 devil_rect = devil_surf.get_rect(center = (1100,450))
 
 # GAME VARIABLES
-
 prog_b = pygame.image.load('graphics/progress_b.png').convert()
 prog_w = pygame.image.load('graphics/progress_w.png').convert()
 
@@ -803,12 +811,9 @@ gamble_surf = pygame.image.load('graphics/gamble.png').convert()
 gamble_rect = gamble_surf.get_rect(center = (120,310))
 
 # GAMBLE MODE VARIABLES
-
-
 gamble = Gamble()
 
 # Score screen variables
-
 arial_font_100 = pygame.font.Font('font/Arialn.ttf',100)
 
 retry_surf = pygame.image.load('graphics/retry.png').convert()
@@ -818,7 +823,6 @@ exit_to_menu = pygame.image.load('graphics/menu.png').convert()
 menu_exit_rect = exit_to_menu.get_rect(center = (1000,700))
 
 # timers
-
 circle_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(circle_timer, 600)
 
@@ -895,8 +899,10 @@ while True:
                                 board.append(Tile(x, y, True, False))
                             else:
                                 board.append(Tile(x, y, False, False))
-                    
-                    
+                                
+                if exit_to_menu.get_rect(center = (125,75)).collidepoint(event.pos):
+                    difficulty = False
+                    menu = True
 
         elif game_active:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -953,7 +959,6 @@ while True:
                 if menu_exit_rect.collidepoint(event.pos):
                     score_screen = False
                     menu = True
-            
 
     if menu:
         screen.fill('Green')
@@ -970,10 +975,12 @@ while True:
 
     if rules_menu:
         screen.fill('White')
+        screen.blit(guide_surf,guide_rect)
         rules_text_display(rules_texts)
 
     if difficulty:
         screen.fill('Green')
+        screen.blit(exit_to_menu,exit_to_menu.get_rect(center = (125,75)))
         screen.blit(casual_surf,casual_rect)
         screen.blit(devil_surf,devil_rect)
 
