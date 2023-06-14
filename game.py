@@ -11,19 +11,27 @@ class Game: #
         self.turn = 0
         self.turn_display = arial_font_40.render(f'Turn: {self.turn}',False,'Black')
 
-        if devil_mode: self.turn_display_rect = self.turn_display.get_rect(center = (200,500))
-        else: self.turn_display_rect = self.turn_display.get_rect(center = (200,400))
+        if devil_mode: 
+            self.turn_display_rect = self.turn_display.get_rect(center = (200,500))
+        else: 
+            self.turn_display_rect = self.turn_display.get_rect(center = (200,400))
 
         self.piece_num = 0
         self.piece_num_display = arial_font_40.render(f'Black pieces: {self.piece_num}',False,'Black')
 
-        if devil_mode: self.piece_num_rect = self.piece_num_display.get_rect(center = (200,600))
-        else: self.piece_num_rect = self.piece_num_display.get_rect(center = (200,500))
+        if devil_mode: 
+            self.piece_num_rect = self.piece_num_display.get_rect(center = (200,600))
+        else: 
+            self.piece_num_rect = self.piece_num_display.get_rect(center = (200,500))
 
-        if player_turn: self.turn_side = arial_font_40.render(f'Turn: Black',False,'Black')
-        else: self.turn_side = arial_font_40.render(f'Turn: White',False,'Black')
-        if devil_mode: self.turn_side_rect = self.turn_side.get_rect(center = (200,700))
-        else: self.turn_side_rect = self.turn_side.get_rect(center = (200,600))
+        if player_turn: 
+            self.turn_side = arial_font_40.render(f'Turn: Black',False,'Black')
+        else: 
+            self.turn_side = arial_font_40.render(f'Turn: White',False,'Black')
+        if devil_mode: 
+            self.turn_side_rect = self.turn_side.get_rect(center = (200,700))
+        else: 
+            self.turn_side_rect = self.turn_side.get_rect(center = (200,600))
 
     def display_turn(self):
         self.turn_display = arial_font_40.render(f'Turn: {self.turn}',False,'Black')
@@ -151,7 +159,6 @@ class Tile:
 
         self.rect = self.image.get_rect(center = (350+100*x, 900-(y*100)))
 
-
     def player_turn(self):
         if devil_mode: self.image = pygame.image.load('graphics/tile_b_2.png').convert()
         else: self.image = pygame.image.load('graphics/tile_b.png').convert()
@@ -185,7 +192,8 @@ class Tile:
         return self.occupied
     
     def flip(self):
-        self.player_piece = not self.player_piece
+        if self.occupied:
+            self.player_piece = not self.player_piece
 
     def display(self):
         screen.blit(self.image,self.rect)
