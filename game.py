@@ -102,6 +102,16 @@ class Gamble:
     def get_num(self):
         return self.generated_num
 
+    def contact_w_mouse(self,num):
+        if num == 1: self.one = pygame.image.load('graphics/one_hover.png').convert_alpha()
+        elif num == 2: self.two == pygame.image.load('graphics/two_hover.png').convert_alpha()
+        elif num == 3: self.three = pygame.image.load('graphics/three_hover.png').convert_alpha()
+
+    def not_in_contact(self):
+        self.one = pygame.image.load('graphics/one.png').convert_alpha()
+        self.two = pygame.image.load('graphics/two.png').convert_alpha()
+        self.three = pygame.image.load('graphics/three.png').convert_alpha()
+
     def player_input(self, input):
         global gamble_active
         if input == self.generated_num: 
@@ -680,12 +690,17 @@ def progress_line():
         screen.blit(prog_w,prog_w.get_rect(midtop = (1400, 50+(p_b*8)+x*8)))
 
 def gamble_result(correct):
-    global player_turn, extend_turn
+    global player_turn, extend_turn, board
     time = 1500
+    award = choice([1,2])
     exit_game = False
     font = pygame.font.Font('font/Arialn.ttf',120)
     if correct:
-        extend_turn = 1
+        if award == 1:
+            extend_turn = 1
+        else:
+            for x in board:
+                x.flip()
         msg = font.render('Gamble Won',False,'Green')
     else:
         player_turn = not player_turn
