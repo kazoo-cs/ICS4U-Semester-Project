@@ -3,7 +3,7 @@ import sys
 from sys import exit
 from random import randint, choice
 
-class Game: # 
+class Game: 
     def __init__(self):
         super().__init__()
         global event, player_turn, board, devil_mode
@@ -752,7 +752,6 @@ music_playing = False
 # MENU VARIABLES
 circle_surf = pygame.image.load('graphics/circle.png').convert_alpha()
 circle_surf_2 = pygame.image.load('graphics/circle2.png').convert_alpha()
-
 circle_rect = circle_surf.get_rect(midright = (100,200))
 circle_rect_2 = circle_surf_2.get_rect(midleft = (0,0))
 circles = []

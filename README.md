@@ -9,5 +9,4 @@ I am aiming to create a fully executable python program by the end of June. If p
 ## Tech used
 - Pygame
 - Github
-- PyTorch
 - Visual Studio Code
